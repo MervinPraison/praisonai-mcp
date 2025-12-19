@@ -1803,3 +1803,995 @@ ALL_TOOLS = (
     HOOKS_TOOLS +
     DOCS_TOOLS
 )
+
+
+# =============================================================================
+# CODE EDITING TOOLS - Advanced code operations
+# =============================================================================
+
+def code_apply_diff(file_path: str, diff_content: str) -> Dict[str, Any]:
+    """Apply a SEARCH/REPLACE diff to a file.
+    
+    Args:
+        file_path: Path to the file to modify
+        diff_content: Diff content in SEARCH/REPLACE format
+    
+    Returns:
+        Result of the diff application
+    
+    Example diff format:
+        <<<<<<< SEARCH
+        old code here
+        =======
+        new code here
+        >>>>>>> REPLACE
+    """
+    try:
+        from praisonai.code import apply_diff
+        
+        result = apply_diff(file_path, diff_content)
+        
+        return {
+            "file": file_path,
+            "success": result.success if hasattr(result, 'success') else True,
+            "message": str(result),
+        }
+    except ImportError:
+        return {"error": "praisonai.code not installed"}
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+def code_search_replace(file_path: str, search: str, replace: str, replace_all: bool = False) -> Dict[str, Any]:
+    """Search and replace text in a file.
+    
+    Args:
+        file_path: Path to the file
+        search: Text to search for
+        replace: Text to replace with
+        replace_all: Replace all occurrences (default: first only)
+    
+    Returns:
+        Result of the operation
+    """
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        if search not in content:
+            return {"file": file_path, "error": "Search text not found", "success": False}
+        
+        if replace_all:
+            new_content = content.replace(search, replace)
+            count = content.count(search)
+        else:
+            new_content = content.replace(search, replace, 1)
+            count = 1
+        
+        with open(file_path, 'w') as f:
+            f.write(new_content)
+        
+        return {
+            "file": file_path,
+            "replacements": count,
+            "success": True
+        }
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+# =============================================================================
+# AGENT TYPE TOOLS - Different agent types
+# =============================================================================
+
+def run_auto_agents(topic: str, num_agents: int = 3) -> Dict[str, Any]:
+    """Run auto-generated agents for a topic.
+    
+    Args:
+        topic: Topic or task for agents
+        num_agents: Number of agents to generate
+    
+    Returns:
+        Result from auto agents
+    """
+    try:
+        from praisonaiagents import AutoAgents
+        
+        agents = AutoAgents(topic=topic, num_agents=num_agents)
+        result = agents.run()
+        
+        return {
+            "topic": topic,
+            "num_agents": num_agents,
+            "result": str(result),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed"}
+    except Exception as e:
+        return {"topic": topic, "error": str(e), "success": False}
+
+
+def run_handoff(task: str, agents: List[str]) -> Dict[str, Any]:
+    """Run task with agent handoff/delegation.
+    
+    Args:
+        task: Task to complete
+        agents: List of agent roles for handoff
+    
+    Returns:
+        Result from handoff execution
+    """
+    try:
+        from praisonaiagents import Agent, handoff
+        
+        # Create agents for each role
+        agent_list = []
+        for role in agents:
+            agent_list.append(Agent(
+                name=role,
+                instructions=f"You are a {role}. Complete tasks related to your expertise."
+            ))
+        
+        # Run with handoff
+        primary = agent_list[0]
+        if len(agent_list) > 1:
+            primary.handoffs = agent_list[1:]
+        
+        result = primary.start(task)
+        
+        return {
+            "task": task,
+            "agents": agents,
+            "result": str(result),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed"}
+    except Exception as e:
+        return {"task": task, "error": str(e), "success": False}
+
+
+# =============================================================================
+# DATA FORMAT TOOLS - CSV, JSON, XML, YAML
+# =============================================================================
+
+def read_csv(file_path: str, limit: int = 100) -> Dict[str, Any]:
+    """Read a CSV file.
+    
+    Args:
+        file_path: Path to CSV file
+        limit: Maximum rows to return
+    
+    Returns:
+        CSV data as list of dicts
+    """
+    try:
+        import csv
+        
+        with open(file_path, 'r', newline='') as f:
+            reader = csv.DictReader(f)
+            rows = []
+            for i, row in enumerate(reader):
+                if i >= limit:
+                    break
+                rows.append(dict(row))
+        
+        return {
+            "file": file_path,
+            "rows": rows,
+            "count": len(rows),
+            "success": True
+        }
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+def write_csv(file_path: str, data: List[Dict[str, Any]], headers: List[str] = None) -> Dict[str, Any]:
+    """Write data to a CSV file.
+    
+    Args:
+        file_path: Path to CSV file
+        data: List of dicts to write
+        headers: Column headers (auto-detected if not provided)
+    
+    Returns:
+        Write status
+    """
+    try:
+        import csv
+        
+        if not data:
+            return {"error": "No data provided", "success": False}
+        
+        if not headers:
+            headers = list(data[0].keys())
+        
+        with open(file_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+            writer.writerows(data)
+        
+        return {
+            "file": file_path,
+            "rows": len(data),
+            "success": True
+        }
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+def read_json_file(file_path: str) -> Dict[str, Any]:
+    """Read a JSON file.
+    
+    Args:
+        file_path: Path to JSON file
+    
+    Returns:
+        Parsed JSON data
+    """
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        
+        return {
+            "file": file_path,
+            "data": data,
+            "success": True
+        }
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+def write_json_file(file_path: str, data: Any, indent: int = 2) -> Dict[str, Any]:
+    """Write data to a JSON file.
+    
+    Args:
+        file_path: Path to JSON file
+        data: Data to write
+        indent: Indentation level
+    
+    Returns:
+        Write status
+    """
+    try:
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=indent)
+        
+        return {
+            "file": file_path,
+            "success": True
+        }
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+def read_yaml_file(file_path: str) -> Dict[str, Any]:
+    """Read a YAML file.
+    
+    Args:
+        file_path: Path to YAML file
+    
+    Returns:
+        Parsed YAML data
+    """
+    try:
+        import yaml
+        
+        with open(file_path, 'r') as f:
+            data = yaml.safe_load(f)
+        
+        return {
+            "file": file_path,
+            "data": data,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "pyyaml not installed"}
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+def write_yaml_file(file_path: str, data: Any) -> Dict[str, Any]:
+    """Write data to a YAML file.
+    
+    Args:
+        file_path: Path to YAML file
+        data: Data to write
+    
+    Returns:
+        Write status
+    """
+    try:
+        import yaml
+        
+        with open(file_path, 'w') as f:
+            yaml.dump(data, f, default_flow_style=False)
+        
+        return {
+            "file": file_path,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "pyyaml not installed"}
+    except Exception as e:
+        return {"file": file_path, "error": str(e), "success": False}
+
+
+# =============================================================================
+# SEARCH PROVIDER TOOLS - Wikipedia, Arxiv, etc.
+# =============================================================================
+
+def wikipedia_search(query: str, limit: int = 3) -> Dict[str, Any]:
+    """Search Wikipedia.
+    
+    Args:
+        query: Search query
+        limit: Maximum results
+    
+    Returns:
+        Wikipedia search results
+    """
+    try:
+        import wikipedia
+        
+        results = wikipedia.search(query, results=limit)
+        summaries = []
+        for title in results[:limit]:
+            try:
+                summary = wikipedia.summary(title, sentences=2)
+                summaries.append({"title": title, "summary": summary})
+            except:
+                summaries.append({"title": title, "summary": "Summary not available"})
+        
+        return {
+            "query": query,
+            "results": summaries,
+            "count": len(summaries),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "wikipedia not installed. Run: pip install wikipedia"}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def arxiv_search(query: str, max_results: int = 5) -> Dict[str, Any]:
+    """Search arXiv for academic papers.
+    
+    Args:
+        query: Search query
+        max_results: Maximum results
+    
+    Returns:
+        arXiv paper results
+    """
+    try:
+        import arxiv
+        
+        search = arxiv.Search(
+            query=query,
+            max_results=max_results,
+            sort_by=arxiv.SortCriterion.Relevance
+        )
+        
+        papers = []
+        for result in search.results():
+            papers.append({
+                "title": result.title,
+                "authors": [a.name for a in result.authors][:3],
+                "summary": result.summary[:300],
+                "url": result.pdf_url,
+                "published": str(result.published.date())
+            })
+        
+        return {
+            "query": query,
+            "papers": papers,
+            "count": len(papers),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "arxiv not installed. Run: pip install arxiv"}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def web_crawl(url: str, max_pages: int = 5) -> Dict[str, Any]:
+    """Crawl a website and extract content.
+    
+    Args:
+        url: Starting URL
+        max_pages: Maximum pages to crawl
+    
+    Returns:
+        Crawled content
+    """
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+        
+        response = requests.get(url, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Extract text
+        for script in soup(["script", "style"]):
+            script.decompose()
+        text = soup.get_text(separator='\n', strip=True)
+        
+        # Extract links
+        links = []
+        for a in soup.find_all('a', href=True)[:20]:
+            links.append(a['href'])
+        
+        return {
+            "url": url,
+            "title": soup.title.string if soup.title else "",
+            "text": text[:5000],
+            "links": links,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "requests/beautifulsoup4 not installed"}
+    except Exception as e:
+        return {"url": url, "error": str(e), "success": False}
+
+
+# =============================================================================
+# CALCULATOR ADVANCED TOOLS
+# =============================================================================
+
+def solve_equation(equation: str) -> Dict[str, Any]:
+    """Solve a mathematical equation.
+    
+    Args:
+        equation: Equation to solve (e.g., "x**2 - 4 = 0")
+    
+    Returns:
+        Solution(s)
+    """
+    try:
+        from sympy import symbols, solve, sympify
+        from sympy.parsing.sympy_parser import parse_expr
+        
+        x = symbols('x')
+        
+        # Handle equation format
+        if '=' in equation:
+            left, right = equation.split('=')
+            expr = parse_expr(left) - parse_expr(right)
+        else:
+            expr = parse_expr(equation)
+        
+        solutions = solve(expr, x)
+        
+        return {
+            "equation": equation,
+            "solutions": [str(s) for s in solutions],
+            "success": True
+        }
+    except ImportError:
+        return {"error": "sympy not installed. Run: pip install sympy"}
+    except Exception as e:
+        return {"equation": equation, "error": str(e), "success": False}
+
+
+def convert_units(value: float, from_unit: str, to_unit: str) -> Dict[str, Any]:
+    """Convert between units.
+    
+    Args:
+        value: Value to convert
+        from_unit: Source unit
+        to_unit: Target unit
+    
+    Returns:
+        Converted value
+    """
+    # Common conversions
+    conversions = {
+        # Length
+        ("m", "ft"): 3.28084,
+        ("ft", "m"): 0.3048,
+        ("km", "mi"): 0.621371,
+        ("mi", "km"): 1.60934,
+        ("cm", "in"): 0.393701,
+        ("in", "cm"): 2.54,
+        # Weight
+        ("kg", "lb"): 2.20462,
+        ("lb", "kg"): 0.453592,
+        ("g", "oz"): 0.035274,
+        ("oz", "g"): 28.3495,
+        # Temperature handled separately
+        # Volume
+        ("l", "gal"): 0.264172,
+        ("gal", "l"): 3.78541,
+    }
+    
+    try:
+        # Temperature conversions
+        if from_unit.lower() == "c" and to_unit.lower() == "f":
+            result = (value * 9/5) + 32
+        elif from_unit.lower() == "f" and to_unit.lower() == "c":
+            result = (value - 32) * 5/9
+        elif from_unit.lower() == "c" and to_unit.lower() == "k":
+            result = value + 273.15
+        elif from_unit.lower() == "k" and to_unit.lower() == "c":
+            result = value - 273.15
+        elif (from_unit.lower(), to_unit.lower()) in conversions:
+            result = value * conversions[(from_unit.lower(), to_unit.lower())]
+        else:
+            return {"error": f"Unknown conversion: {from_unit} to {to_unit}", "success": False}
+        
+        return {
+            "value": value,
+            "from_unit": from_unit,
+            "to_unit": to_unit,
+            "result": round(result, 6),
+            "success": True
+        }
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+def calculate_statistics(numbers: List[float]) -> Dict[str, Any]:
+    """Calculate statistics for a list of numbers.
+    
+    Args:
+        numbers: List of numbers
+    
+    Returns:
+        Statistical measures
+    """
+    try:
+        import statistics
+        
+        n = len(numbers)
+        if n == 0:
+            return {"error": "Empty list", "success": False}
+        
+        result = {
+            "count": n,
+            "sum": sum(numbers),
+            "mean": statistics.mean(numbers),
+            "min": min(numbers),
+            "max": max(numbers),
+        }
+        
+        if n >= 2:
+            result["stdev"] = statistics.stdev(numbers)
+            result["variance"] = statistics.variance(numbers)
+        
+        if n >= 1:
+            result["median"] = statistics.median(numbers)
+        
+        return {**result, "success": True}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# SYSTEM TOOLS - Process and system info
+# =============================================================================
+
+def list_processes(filter_name: str = None) -> Dict[str, Any]:
+    """List running processes.
+    
+    Args:
+        filter_name: Filter by process name (optional)
+    
+    Returns:
+        List of processes
+    """
+    try:
+        import psutil
+        
+        processes = []
+        for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+            try:
+                info = proc.info
+                if filter_name and filter_name.lower() not in info['name'].lower():
+                    continue
+                processes.append({
+                    "pid": info['pid'],
+                    "name": info['name'],
+                    "cpu": info['cpu_percent'],
+                    "memory": round(info['memory_percent'], 2)
+                })
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+        
+        # Sort by CPU usage
+        processes.sort(key=lambda x: x['cpu'] or 0, reverse=True)
+        
+        return {
+            "processes": processes[:50],
+            "count": len(processes),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "psutil not installed. Run: pip install psutil"}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+def get_system_info() -> Dict[str, Any]:
+    """Get system information.
+    
+    Returns:
+        System info (CPU, memory, disk)
+    """
+    try:
+        import psutil
+        import platform
+        
+        return {
+            "platform": platform.system(),
+            "platform_version": platform.version(),
+            "architecture": platform.machine(),
+            "processor": platform.processor(),
+            "cpu_count": psutil.cpu_count(),
+            "cpu_percent": psutil.cpu_percent(),
+            "memory_total_gb": round(psutil.virtual_memory().total / (1024**3), 2),
+            "memory_available_gb": round(psutil.virtual_memory().available / (1024**3), 2),
+            "memory_percent": psutil.virtual_memory().percent,
+            "disk_total_gb": round(psutil.disk_usage('/').total / (1024**3), 2),
+            "disk_free_gb": round(psutil.disk_usage('/').free / (1024**3), 2),
+            "disk_percent": psutil.disk_usage('/').percent,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "psutil not installed. Run: pip install psutil"}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# TELEMETRY TOOLS - Metrics tracking
+# =============================================================================
+
+def track_metrics(event: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Track a metrics event.
+    
+    Args:
+        event: Event name
+        data: Event data
+    
+    Returns:
+        Tracking status
+    """
+    try:
+        metrics_file = os.path.expanduser("~/.praisonai/metrics.json")
+        os.makedirs(os.path.dirname(metrics_file), exist_ok=True)
+        
+        # Load existing metrics
+        try:
+            with open(metrics_file, 'r') as f:
+                metrics = json.load(f)
+        except:
+            metrics = []
+        
+        # Add new event
+        metrics.append({
+            "event": event,
+            "data": data or {},
+            "timestamp": get_current_time()["datetime"]
+        })
+        
+        # Keep last 1000 events
+        metrics = metrics[-1000:]
+        
+        with open(metrics_file, 'w') as f:
+            json.dump(metrics, f, indent=2)
+        
+        return {
+            "event": event,
+            "tracked": True,
+            "success": True
+        }
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+def get_metrics(limit: int = 100) -> Dict[str, Any]:
+    """Get tracked metrics.
+    
+    Args:
+        limit: Maximum events to return
+    
+    Returns:
+        Metrics events
+    """
+    try:
+        metrics_file = os.path.expanduser("~/.praisonai/metrics.json")
+        
+        if not os.path.exists(metrics_file):
+            return {"events": [], "count": 0, "success": True}
+        
+        with open(metrics_file, 'r') as f:
+            metrics = json.load(f)
+        
+        return {
+            "events": metrics[-limit:],
+            "count": len(metrics),
+            "success": True
+        }
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# ROUTER TOOLS - Model selection
+# =============================================================================
+
+def select_model(task: str, preferred_provider: str = None) -> Dict[str, Any]:
+    """Select the best model for a task.
+    
+    Args:
+        task: Task description
+        preferred_provider: Preferred provider (openai, anthropic, google)
+    
+    Returns:
+        Recommended model
+    """
+    # Simple heuristic-based model selection
+    task_lower = task.lower()
+    
+    # Task complexity indicators
+    complex_indicators = ["analyze", "research", "complex", "detailed", "comprehensive"]
+    simple_indicators = ["simple", "quick", "short", "basic"]
+    code_indicators = ["code", "program", "function", "debug", "fix"]
+    creative_indicators = ["write", "story", "creative", "poem", "essay"]
+    
+    is_complex = any(ind in task_lower for ind in complex_indicators)
+    is_simple = any(ind in task_lower for ind in simple_indicators)
+    is_code = any(ind in task_lower for ind in code_indicators)
+    is_creative = any(ind in task_lower for ind in creative_indicators)
+    
+    # Model recommendations
+    if preferred_provider == "anthropic":
+        if is_complex or is_code:
+            model = "claude-3-5-sonnet-20241022"
+        else:
+            model = "claude-3-haiku-20240307"
+    elif preferred_provider == "google":
+        if is_complex:
+            model = "gemini-1.5-pro"
+        else:
+            model = "gemini-1.5-flash"
+    else:  # Default to OpenAI
+        if is_complex or is_code:
+            model = "gpt-4o"
+        elif is_creative:
+            model = "gpt-4o"
+        else:
+            model = "gpt-4o-mini"
+    
+    return {
+        "task": task[:100],
+        "recommended_model": model,
+        "provider": preferred_provider or "openai",
+        "complexity": "high" if is_complex else "low" if is_simple else "medium",
+        "success": True
+    }
+
+
+# =============================================================================
+# N8N TOOLS - Workflow export
+# =============================================================================
+
+def export_to_n8n(workflow_name: str, steps: List[str]) -> Dict[str, Any]:
+    """Export workflow to n8n format.
+    
+    Args:
+        workflow_name: Name of the workflow
+        steps: List of workflow steps
+    
+    Returns:
+        n8n workflow JSON
+    """
+    try:
+        # Create n8n workflow structure
+        nodes = []
+        connections = {}
+        
+        # Start node
+        nodes.append({
+            "id": "start",
+            "name": "Start",
+            "type": "n8n-nodes-base.start",
+            "position": [250, 300]
+        })
+        
+        # Create nodes for each step
+        prev_node = "start"
+        for i, step in enumerate(steps):
+            node_id = f"step_{i+1}"
+            nodes.append({
+                "id": node_id,
+                "name": step[:30],
+                "type": "n8n-nodes-base.httpRequest",
+                "position": [250 + (i+1) * 200, 300],
+                "parameters": {
+                    "url": "http://localhost:8005/run",
+                    "method": "POST",
+                    "body": {"task": step}
+                }
+            })
+            
+            # Connect to previous node
+            if prev_node not in connections:
+                connections[prev_node] = {"main": [[]]}
+            connections[prev_node]["main"][0].append({
+                "node": node_id,
+                "type": "main",
+                "index": 0
+            })
+            prev_node = node_id
+        
+        workflow = {
+            "name": workflow_name,
+            "nodes": nodes,
+            "connections": connections,
+            "active": False,
+            "settings": {}
+        }
+        
+        return {
+            "workflow_name": workflow_name,
+            "n8n_workflow": workflow,
+            "node_count": len(nodes),
+            "success": True
+        }
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# AUTO MEMORY TOOLS - Automatic extraction
+# =============================================================================
+
+def auto_extract_memories(text: str, user_id: str = "default") -> Dict[str, Any]:
+    """Automatically extract and store memories from text.
+    
+    Args:
+        text: Text to extract memories from
+        user_id: User ID for memory isolation
+    
+    Returns:
+        Extracted memories
+    """
+    try:
+        # Simple extraction: sentences with key phrases
+        key_phrases = ["remember", "important", "note", "key point", "takeaway", "learned"]
+        
+        sentences = text.replace('\n', ' ').split('.')
+        memories = []
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if len(sentence) > 20:  # Skip very short sentences
+                # Check for key phrases or just take substantial sentences
+                if any(phrase in sentence.lower() for phrase in key_phrases):
+                    memories.append(sentence)
+                elif len(sentence) > 100:  # Long sentences might be important
+                    memories.append(sentence[:200])
+        
+        # Store memories
+        stored = 0
+        for mem in memories[:10]:  # Limit to 10 memories
+            result = memory_add(mem, user_id)
+            if result.get("success"):
+                stored += 1
+        
+        return {
+            "extracted": len(memories),
+            "stored": stored,
+            "memories": memories[:10],
+            "success": True
+        }
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# UPDATED TOOLS REGISTRY - Add all new tools
+# =============================================================================
+
+# Code editing tools
+CODE_EDITING_TOOLS = [
+    code_apply_diff,
+    code_search_replace,
+]
+
+# Agent type tools
+AGENT_TYPE_TOOLS = [
+    run_auto_agents,
+    run_handoff,
+]
+
+# Data format tools
+DATA_FORMAT_TOOLS = [
+    read_csv,
+    write_csv,
+    read_json_file,
+    write_json_file,
+    read_yaml_file,
+    write_yaml_file,
+]
+
+# Advanced search tools
+ADVANCED_SEARCH_TOOLS = [
+    wikipedia_search,
+    arxiv_search,
+    web_crawl,
+]
+
+# Calculator advanced tools
+CALCULATOR_ADVANCED_TOOLS = [
+    solve_equation,
+    convert_units,
+    calculate_statistics,
+]
+
+# System info tools
+SYSTEM_INFO_TOOLS = [
+    list_processes,
+    get_system_info,
+]
+
+# Telemetry tools
+TELEMETRY_TOOLS = [
+    track_metrics,
+    get_metrics,
+]
+
+# Router tools
+ROUTER_TOOLS = [
+    select_model,
+]
+
+# N8N tools
+N8N_TOOLS = [
+    export_to_n8n,
+]
+
+# Auto memory tools
+AUTO_MEMORY_TOOLS = [
+    auto_extract_memories,
+]
+
+# Update ALL_TOOLS with new additions
+ALL_TOOLS = (
+    CORE_TOOLS +
+    FILE_TOOLS +
+    AGENT_TOOLS +
+    MEMORY_TOOLS +
+    KNOWLEDGE_TOOLS +
+    TODO_TOOLS +
+    WORKFLOW_TOOLS +
+    CODE_TOOLS +
+    MCP_TOOLS +
+    SESSION_TOOLS +
+    WORKFLOW_ADVANCED_TOOLS +
+    PLANNING_TOOLS +
+    GUARDRAIL_TOOLS +
+    RESEARCH_TOOLS +
+    CONTEXT_TOOLS +
+    SEARCH_PROVIDER_TOOLS +
+    FINANCE_TOOLS +
+    IMAGE_TOOLS +
+    QUERY_TOOLS +
+    RULES_TOOLS +
+    HOOKS_TOOLS +
+    DOCS_TOOLS +
+    CODE_EDITING_TOOLS +
+    AGENT_TYPE_TOOLS +
+    DATA_FORMAT_TOOLS +
+    ADVANCED_SEARCH_TOOLS +
+    CALCULATOR_ADVANCED_TOOLS +
+    SYSTEM_INFO_TOOLS +
+    TELEMETRY_TOOLS +
+    ROUTER_TOOLS +
+    N8N_TOOLS +
+    AUTO_MEMORY_TOOLS
+)

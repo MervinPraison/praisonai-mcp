@@ -11,28 +11,24 @@ An MCP server that exposes [PraisonAI](https://github.com/MervinPraison/PraisonA
 
 ## Features
 
-- 🛠️ **47 Built-in Tools** - Agents, memory, knowledge, workflows, planning, and more
+- 🛠️ **70 Built-in Tools** - Complete coverage of all PraisonAI features
 - 🤖 **AI Agents as Tools** - Run PraisonAI agents directly from MCP
 - 🔌 **Multiple Transports** - stdio (Claude Desktop) and SSE (web clients)
 - ⚡ **Easy Setup** - Works with `uvx` or `pip install`
 
 ## Installation
 
-### Using uvx (Recommended)
-
 ```bash
+# Using uvx (Recommended)
 uvx praisonai-mcp
-```
 
-### Using pip
-
-```bash
+# Using pip
 pip install praisonai-mcp
 ```
 
 ## Usage with Claude Desktop
 
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -45,167 +41,191 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 }
 ```
 
-## Available Tools (47 Total)
+## Available Tools (70 Total)
 
-### 🔧 Core Tools (3)
+### 🔧 Core Tools
 | Tool | Description |
 |------|-------------|
 | `search_web` | Search the web using Tavily or DuckDuckGo |
-| `calculate` | Evaluate mathematical expressions safely |
+| `calculate` | Evaluate mathematical expressions |
 | `get_current_time` | Get current date/time in any timezone |
 
-### 📁 File Tools (3)
+### 📁 File Tools
 | Tool | Description |
 |------|-------------|
-| `read_file` | Read contents of a file |
-| `write_file` | Write content to a file |
-| `list_directory` | List files in a directory |
+| `read_file` | Read file contents |
+| `write_file` | Write content to file |
+| `list_directory` | List directory contents |
 
-### 🤖 Agent Tools (3)
+### 🤖 Agent Tools
 | Tool | Description |
 |------|-------------|
-| `run_agent` | Run a PraisonAI agent with a prompt |
+| `run_agent` | Run a PraisonAI agent |
 | `run_research` | Deep research on any topic |
-| `generate_agents_yaml` | Generate agents.yaml for a topic |
+| `generate_agents_yaml` | Generate agents.yaml |
+| `run_auto_agents` | Run auto-generated agents |
+| `run_handoff` | Run with agent handoff |
 
-### 🧠 Memory Tools (4)
+### 🧠 Memory Tools
 | Tool | Description |
 |------|-------------|
-| `memory_add` | Add content to memory store |
+| `memory_add` | Add to memory store |
 | `memory_search` | Search memories |
 | `memory_list` | List all memories |
-| `memory_clear` | Clear all memories |
+| `memory_clear` | Clear memories |
+| `auto_extract_memories` | Auto-extract memories from text |
 
-### 📚 Knowledge Tools (2)
+### 📚 Knowledge Tools
 | Tool | Description |
 |------|-------------|
 | `knowledge_add` | Add to knowledge base |
 | `knowledge_search` | Search knowledge base |
 
-### ✅ Todo Tools (3)
+### ✅ Todo Tools
 | Tool | Description |
 |------|-------------|
-| `todo_add` | Add a task to todo list |
-| `todo_list` | List all tasks |
-| `todo_complete` | Mark task as completed |
+| `todo_add` | Add task |
+| `todo_list` | List tasks |
+| `todo_complete` | Complete task |
 
-### 🔄 Workflow Tools (3)
+### 🔄 Workflow Tools
 | Tool | Description |
 |------|-------------|
-| `workflow_run` | Run multi-step workflows |
-| `workflow_create` | Create a workflow with steps |
-| `workflow_from_yaml` | Create workflow from YAML |
+| `workflow_run` | Run workflow |
+| `workflow_create` | Create workflow |
+| `workflow_from_yaml` | Create from YAML |
+| `export_to_n8n` | Export to n8n format |
 
-### 💻 Code Tools (3)
+### 💻 Code Tools
 | Tool | Description |
 |------|-------------|
 | `run_python` | Execute Python code |
 | `run_shell` | Execute shell commands |
-| `git_commit` | Create git commits (AI-generated messages) |
+| `git_commit` | Create git commits |
+| `code_apply_diff` | Apply SEARCH/REPLACE diff |
+| `code_search_replace` | Search and replace in file |
 
-### 🔌 MCP Tools (2)
+### 📊 Data Format Tools
 | Tool | Description |
 |------|-------------|
-| `mcp_list_servers` | List available MCP servers |
-| `mcp_connect` | Connect to an MCP server |
+| `read_csv` | Read CSV file |
+| `write_csv` | Write CSV file |
+| `read_json_file` | Read JSON file |
+| `write_json_file` | Write JSON file |
+| `read_yaml_file` | Read YAML file |
+| `write_yaml_file` | Write YAML file |
 
-### 💾 Session Tools (3)
+### 🌐 Search Tools
 | Tool | Description |
 |------|-------------|
-| `session_save` | Save current session |
-| `session_load` | Load a saved session |
-| `session_list` | List all sessions |
-
-### 📋 Planning Tools (2)
-| Tool | Description |
-|------|-------------|
-| `plan_create` | Create a plan for a goal |
-| `plan_execute` | Execute a plan step by step |
-
-### 🛡️ Guardrail Tools (1)
-| Tool | Description |
-|------|-------------|
-| `guardrail_validate` | Validate content against rules |
-
-### 🔬 Research Tools (1)
-| Tool | Description |
-|------|-------------|
-| `deep_research` | Deep research with multiple iterations |
-
-### 🔍 Context Tools (2)
-| Tool | Description |
-|------|-------------|
-| `analyze_repository` | Analyze a repository for a goal |
-| `fast_context_search` | Search codebase for context |
-
-### 🌐 Search Provider Tools (2)
-| Tool | Description |
-|------|-------------|
-| `tavily_search` | Search using Tavily API |
+| `tavily_search` | Search using Tavily |
 | `duckduckgo_search` | Search using DuckDuckGo |
+| `wikipedia_search` | Search Wikipedia |
+| `arxiv_search` | Search arXiv papers |
+| `web_crawl` | Crawl and extract web content |
 
-### 📈 Finance Tools (2)
+### 📈 Finance Tools
 | Tool | Description |
 |------|-------------|
 | `get_stock_price` | Get current stock price |
 | `get_stock_history` | Get historical stock data |
 
-### 🖼️ Image Tools (1)
+### 🧮 Calculator Tools
 | Tool | Description |
 |------|-------------|
-| `analyze_image` | Analyze image using vision model |
+| `solve_equation` | Solve mathematical equations |
+| `convert_units` | Convert between units |
+| `calculate_statistics` | Calculate statistics |
 
-### ✍️ Query Tools (2)
+### 💾 Session Tools
 | Tool | Description |
 |------|-------------|
-| `rewrite_query` | Rewrite query for better results |
-| `expand_prompt` | Expand short prompt to detailed |
+| `session_save` | Save session |
+| `session_load` | Load session |
+| `session_list` | List sessions |
 
-### 📜 Rules Tools (3)
+### 📋 Planning Tools
 | Tool | Description |
 |------|-------------|
-| `rules_list` | List all defined rules |
-| `rules_add` | Add a new rule |
-| `rules_get` | Get a specific rule |
+| `plan_create` | Create a plan |
+| `plan_execute` | Execute a plan |
 
-### 🪝 Hooks Tools (1)
+### 🛡️ Guardrail Tools
+| Tool | Description |
+|------|-------------|
+| `guardrail_validate` | Validate content |
+
+### 🔬 Research Tools
+| Tool | Description |
+|------|-------------|
+| `deep_research` | Deep research with iterations |
+
+### 🔍 Context Tools
+| Tool | Description |
+|------|-------------|
+| `analyze_repository` | Analyze repository |
+| `fast_context_search` | Search codebase |
+
+### 🖼️ Image Tools
+| Tool | Description |
+|------|-------------|
+| `analyze_image` | Analyze image |
+
+### ✍️ Query Tools
+| Tool | Description |
+|------|-------------|
+| `rewrite_query` | Rewrite query |
+| `expand_prompt` | Expand prompt |
+
+### 📜 Rules Tools
+| Tool | Description |
+|------|-------------|
+| `rules_list` | List rules |
+| `rules_add` | Add rule |
+| `rules_get` | Get rule |
+
+### 🔌 MCP Tools
+| Tool | Description |
+|------|-------------|
+| `mcp_list_servers` | List MCP servers |
+| `mcp_connect` | Connect to MCP server |
+
+### 🖥️ System Tools
+| Tool | Description |
+|------|-------------|
+| `list_processes` | List running processes |
+| `get_system_info` | Get system information |
+
+### 📊 Telemetry Tools
+| Tool | Description |
+|------|-------------|
+| `track_metrics` | Track metrics event |
+| `get_metrics` | Get tracked metrics |
+
+### 🎯 Router Tools
+| Tool | Description |
+|------|-------------|
+| `select_model` | Select best model for task |
+
+### 🪝 Hooks & Docs
 | Tool | Description |
 |------|-------------|
 | `hooks_list` | List available hooks |
-
-### 📖 Docs Tools (1)
-| Tool | Description |
-|------|-------------|
-| `docs_search` | Search PraisonAI documentation |
-
-## Running as SSE Server
-
-For web clients or remote access:
-
-```bash
-python -m praisonai_mcp --sse --port 8080
-```
+| `docs_search` | Search documentation |
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `OPENAI_API_KEY` | OpenAI API key for AI-powered tools |
-| `TAVILY_API_KEY` | Tavily API key for web search |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `TAVILY_API_KEY` | Tavily search API key |
 | `BRAVE_API_KEY` | Brave Search API key |
 
 ## Related Projects
 
 - [PraisonAI](https://github.com/MervinPraison/PraisonAI) - AI Agents Framework
-- [PraisonAI Agents](https://pypi.org/project/praisonaiagents/) - Lightweight agents package
-- [MCP Registry](https://registry.modelcontextprotocol.io/servers/io.github.MervinPraison/praisonai) - Official MCP Registry listing
+- [MCP Registry](https://registry.modelcontextprotocol.io/servers/io.github.MervinPraison/praisonai)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Links
-
-- 📖 [Documentation](https://docs.praison.ai/mcp)
-- 🐛 [Issues](https://github.com/MervinPraison/praisonai-mcp/issues)
-- 💬 [Discussions](https://github.com/MervinPraison/PraisonAI/discussions)
+MIT License
