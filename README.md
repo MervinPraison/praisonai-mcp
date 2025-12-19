@@ -11,7 +11,7 @@ An MCP server that exposes [PraisonAI](https://github.com/MervinPraison/PraisonA
 
 ## Features
 
-- 🛠️ **30+ Built-in Tools** - Agents, memory, knowledge, todos, workflows, and more
+- 🛠️ **47 Built-in Tools** - Agents, memory, knowledge, workflows, planning, and more
 - 🤖 **AI Agents as Tools** - Run PraisonAI agents directly from MCP
 - 🔌 **Multiple Transports** - stdio (Claude Desktop) and SSE (web clients)
 - ⚡ **Easy Setup** - Works with `uvx` or `pip install`
@@ -45,43 +45,30 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 }
 ```
 
-Or with pip installation:
+## Available Tools (47 Total)
 
-```json
-{
-  "mcpServers": {
-    "praisonai": {
-      "command": "python",
-      "args": ["-m", "praisonai_mcp"]
-    }
-  }
-}
-```
-
-## Available Tools
-
-### 🔧 Core Tools
+### 🔧 Core Tools (3)
 | Tool | Description |
 |------|-------------|
 | `search_web` | Search the web using Tavily or DuckDuckGo |
 | `calculate` | Evaluate mathematical expressions safely |
 | `get_current_time` | Get current date/time in any timezone |
 
-### 📁 File Tools
+### 📁 File Tools (3)
 | Tool | Description |
 |------|-------------|
 | `read_file` | Read contents of a file |
 | `write_file` | Write content to a file |
 | `list_directory` | List files in a directory |
 
-### 🤖 Agent Tools
+### 🤖 Agent Tools (3)
 | Tool | Description |
 |------|-------------|
 | `run_agent` | Run a PraisonAI agent with a prompt |
 | `run_research` | Deep research on any topic |
 | `generate_agents_yaml` | Generate agents.yaml for a topic |
 
-### 🧠 Memory Tools
+### 🧠 Memory Tools (4)
 | Tool | Description |
 |------|-------------|
 | `memory_add` | Add content to memory store |
@@ -89,56 +76,107 @@ Or with pip installation:
 | `memory_list` | List all memories |
 | `memory_clear` | Clear all memories |
 
-### 📚 Knowledge Tools
+### 📚 Knowledge Tools (2)
 | Tool | Description |
 |------|-------------|
 | `knowledge_add` | Add to knowledge base |
 | `knowledge_search` | Search knowledge base |
 
-### ✅ Todo Tools
+### ✅ Todo Tools (3)
 | Tool | Description |
 |------|-------------|
 | `todo_add` | Add a task to todo list |
 | `todo_list` | List all tasks |
 | `todo_complete` | Mark task as completed |
 
-### 🔄 Workflow Tools
+### 🔄 Workflow Tools (3)
 | Tool | Description |
 |------|-------------|
 | `workflow_run` | Run multi-step workflows |
+| `workflow_create` | Create a workflow with steps |
+| `workflow_from_yaml` | Create workflow from YAML |
 
-### 💻 Code Tools
+### 💻 Code Tools (3)
 | Tool | Description |
 |------|-------------|
 | `run_python` | Execute Python code |
 | `run_shell` | Execute shell commands |
 | `git_commit` | Create git commits (AI-generated messages) |
 
-### 🔌 MCP Tools
+### 🔌 MCP Tools (2)
 | Tool | Description |
 |------|-------------|
 | `mcp_list_servers` | List available MCP servers |
 | `mcp_connect` | Connect to an MCP server |
 
-### 💾 Session Tools
+### 💾 Session Tools (3)
 | Tool | Description |
 |------|-------------|
 | `session_save` | Save current session |
 | `session_load` | Load a saved session |
 | `session_list` | List all sessions |
 
-## Running with Specific Categories
+### 📋 Planning Tools (2)
+| Tool | Description |
+|------|-------------|
+| `plan_create` | Create a plan for a goal |
+| `plan_execute` | Execute a plan step by step |
 
-```bash
-# Only core and file tools
-python -m praisonai_mcp --categories core file
+### 🛡️ Guardrail Tools (1)
+| Tool | Description |
+|------|-------------|
+| `guardrail_validate` | Validate content against rules |
 
-# Only agent tools
-python -m praisonai_mcp --categories agent
+### 🔬 Research Tools (1)
+| Tool | Description |
+|------|-------------|
+| `deep_research` | Deep research with multiple iterations |
 
-# All tools (default)
-python -m praisonai_mcp --categories all
-```
+### 🔍 Context Tools (2)
+| Tool | Description |
+|------|-------------|
+| `analyze_repository` | Analyze a repository for a goal |
+| `fast_context_search` | Search codebase for context |
+
+### 🌐 Search Provider Tools (2)
+| Tool | Description |
+|------|-------------|
+| `tavily_search` | Search using Tavily API |
+| `duckduckgo_search` | Search using DuckDuckGo |
+
+### 📈 Finance Tools (2)
+| Tool | Description |
+|------|-------------|
+| `get_stock_price` | Get current stock price |
+| `get_stock_history` | Get historical stock data |
+
+### 🖼️ Image Tools (1)
+| Tool | Description |
+|------|-------------|
+| `analyze_image` | Analyze image using vision model |
+
+### ✍️ Query Tools (2)
+| Tool | Description |
+|------|-------------|
+| `rewrite_query` | Rewrite query for better results |
+| `expand_prompt` | Expand short prompt to detailed |
+
+### 📜 Rules Tools (3)
+| Tool | Description |
+|------|-------------|
+| `rules_list` | List all defined rules |
+| `rules_add` | Add a new rule |
+| `rules_get` | Get a specific rule |
+
+### 🪝 Hooks Tools (1)
+| Tool | Description |
+|------|-------------|
+| `hooks_list` | List available hooks |
+
+### 📖 Docs Tools (1)
+| Tool | Description |
+|------|-------------|
+| `docs_search` | Search PraisonAI documentation |
 
 ## Running as SSE Server
 
@@ -148,16 +186,6 @@ For web clients or remote access:
 python -m praisonai_mcp --sse --port 8080
 ```
 
-Then connect from any MCP client:
-
-```python
-from praisonaiagents import Agent, MCP
-
-agent = Agent(
-    tools=MCP("http://localhost:8080/sse")
-)
-```
-
 ## Environment Variables
 
 | Variable | Description |
@@ -165,20 +193,6 @@ agent = Agent(
 | `OPENAI_API_KEY` | OpenAI API key for AI-powered tools |
 | `TAVILY_API_KEY` | Tavily API key for web search |
 | `BRAVE_API_KEY` | Brave Search API key |
-
-## Development
-
-```bash
-# Clone the repository
-git clone https://github.com/MervinPraison/praisonai-mcp.git
-cd praisonai-mcp
-
-# Install dependencies
-pip install -e .
-
-# Run the server
-python -m praisonai_mcp
-```
 
 ## Related Projects
 

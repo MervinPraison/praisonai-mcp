@@ -1044,3 +1044,762 @@ ALL_TOOLS = (
     MCP_TOOLS +
     SESSION_TOOLS
 )
+
+
+# =============================================================================
+# WORKFLOW ADVANCED TOOLS - Pipeline patterns
+# =============================================================================
+
+def workflow_create(name: str, steps: List[str]) -> Dict[str, Any]:
+    """Create a workflow with multiple steps.
+    
+    Args:
+        name: Workflow name
+        steps: List of step descriptions
+    
+    Returns:
+        Created workflow details
+    """
+    try:
+        from praisonaiagents import Workflow, WorkflowStep
+        
+        workflow_steps = []
+        for i, step_desc in enumerate(steps):
+            workflow_steps.append(WorkflowStep(
+                name=f"step_{i+1}",
+                description=step_desc
+            ))
+        
+        workflow = Workflow(name=name, steps=workflow_steps)
+        
+        return {
+            "name": name,
+            "steps": steps,
+            "step_count": len(steps),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"name": name, "error": str(e), "success": False}
+
+
+def workflow_from_yaml(yaml_content: str) -> Dict[str, Any]:
+    """Create a workflow from YAML definition.
+    
+    Args:
+        yaml_content: YAML workflow definition
+    
+    Returns:
+        Parsed workflow details
+    """
+    try:
+        from praisonaiagents.workflows import YAMLWorkflowParser
+        import yaml
+        
+        config = yaml.safe_load(yaml_content)
+        parser = YAMLWorkflowParser()
+        workflow = parser.parse(config)
+        
+        return {
+            "workflow": str(workflow),
+            "parsed": True,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# PLANNING TOOLS - Plan creation and execution
+# =============================================================================
+
+def plan_create(goal: str, model: str = "gpt-4o-mini") -> Dict[str, Any]:
+    """Create a plan for achieving a goal.
+    
+    Args:
+        goal: The goal to achieve
+        model: LLM model to use for planning
+    
+    Returns:
+        Generated plan with steps
+    """
+    try:
+        from praisonaiagents import Agent
+        
+        agent = Agent(
+            instructions="""You are a planning assistant. Create a detailed step-by-step plan.
+            Format each step as: 1. [Step description]
+            Be specific and actionable.""",
+            llm=model
+        )
+        
+        result = agent.start(f"Create a detailed plan for: {goal}")
+        
+        return {
+            "goal": goal,
+            "plan": str(result),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"goal": goal, "error": str(e), "success": False}
+
+
+def plan_execute(plan: str, model: str = "gpt-4o-mini") -> Dict[str, Any]:
+    """Execute a plan step by step.
+    
+    Args:
+        plan: The plan to execute (text with numbered steps)
+        model: LLM model to use for execution
+    
+    Returns:
+        Execution results for each step
+    """
+    try:
+        from praisonaiagents import Agent
+        
+        agent = Agent(
+            instructions="Execute each step of the plan and report results.",
+            llm=model
+        )
+        
+        result = agent.start(f"Execute this plan:\n{plan}")
+        
+        return {
+            "plan": plan[:200] + "..." if len(plan) > 200 else plan,
+            "execution_result": str(result),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# GUARDRAIL TOOLS - Output validation
+# =============================================================================
+
+def guardrail_validate(content: str, rules: str) -> Dict[str, Any]:
+    """Validate content against guardrail rules.
+    
+    Args:
+        content: Content to validate
+        rules: Validation rules description
+    
+    Returns:
+        Validation result
+    """
+    try:
+        from praisonaiagents import Agent
+        
+        agent = Agent(
+            instructions=f"""You are a content validator. Check if the content follows these rules:
+            {rules}
+            
+            Respond with:
+            - PASS: if content follows all rules
+            - FAIL: if content violates any rules, explain which ones""",
+            llm="gpt-4o-mini"
+        )
+        
+        result = agent.start(f"Validate this content:\n{content}")
+        result_str = str(result)
+        
+        return {
+            "content": content[:100] + "..." if len(content) > 100 else content,
+            "rules": rules,
+            "result": result_str,
+            "passed": "PASS" in result_str.upper(),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+# =============================================================================
+# DEEP RESEARCH TOOLS - Advanced research
+# =============================================================================
+
+def deep_research(query: str, max_depth: int = 3, model: str = "gpt-4o-mini") -> Dict[str, Any]:
+    """Perform deep research on a topic with multiple iterations.
+    
+    Args:
+        query: Research query
+        max_depth: Maximum research depth/iterations
+        model: LLM model to use
+    
+    Returns:
+        Comprehensive research results
+    """
+    try:
+        from praisonaiagents import DeepResearchAgent
+        
+        agent = DeepResearchAgent(
+            model=model,
+            max_iterations=max_depth
+        )
+        
+        result = agent.research(query)
+        
+        return {
+            "query": query,
+            "research": result.content if hasattr(result, 'content') else str(result),
+            "citations": result.citations if hasattr(result, 'citations') else [],
+            "success": True
+        }
+    except ImportError:
+        # Fallback to regular research
+        return run_research(query, model)
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+# =============================================================================
+# CONTEXT TOOLS - Repository analysis
+# =============================================================================
+
+def analyze_repository(url: str, goal: str) -> Dict[str, Any]:
+    """Analyze a repository for a specific goal.
+    
+    Args:
+        url: Repository URL (GitHub, GitLab, etc.)
+        goal: Analysis goal or question
+    
+    Returns:
+        Repository analysis results
+    """
+    try:
+        from praisonaiagents import ContextAgent, create_context_agent
+        
+        agent = create_context_agent(url=url)
+        result = agent.analyze(goal)
+        
+        return {
+            "url": url,
+            "goal": goal,
+            "analysis": str(result),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"url": url, "error": str(e), "success": False}
+
+
+def fast_context_search(path: str, query: str) -> Dict[str, Any]:
+    """Search codebase for relevant context.
+    
+    Args:
+        path: Path to search in
+        query: Search query
+    
+    Returns:
+        Relevant code snippets and files
+    """
+    try:
+        from praisonaiagents import FastContext
+        
+        fc = FastContext(path)
+        results = fc.search(query)
+        
+        return {
+            "path": path,
+            "query": query,
+            "results": [
+                {
+                    "file": r.file_path,
+                    "lines": f"{r.start_line}-{r.end_line}",
+                    "snippet": r.content[:200]
+                }
+                for r in results[:10]
+            ],
+            "count": len(results),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "FastContext not available"}
+    except Exception as e:
+        return {"path": path, "error": str(e), "success": False}
+
+
+# =============================================================================
+# SEARCH TOOLS - Various search providers
+# =============================================================================
+
+def tavily_search(query: str, max_results: int = 5) -> Dict[str, Any]:
+    """Search using Tavily API.
+    
+    Args:
+        query: Search query
+        max_results: Maximum results
+    
+    Returns:
+        Search results
+    """
+    try:
+        api_key = os.environ.get("TAVILY_API_KEY")
+        if not api_key:
+            return {"error": "TAVILY_API_KEY not set", "success": False}
+        
+        from tavily import TavilyClient
+        client = TavilyClient(api_key=api_key)
+        response = client.search(query, max_results=max_results)
+        
+        return {
+            "query": query,
+            "results": response.get("results", []),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "tavily not installed. Run: pip install tavily-python"}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def duckduckgo_search(query: str, max_results: int = 5) -> Dict[str, Any]:
+    """Search using DuckDuckGo.
+    
+    Args:
+        query: Search query
+        max_results: Maximum results
+    
+    Returns:
+        Search results
+    """
+    try:
+        from duckduckgo_search import DDGS
+        
+        with DDGS() as ddgs:
+            results = list(ddgs.text(query, max_results=max_results))
+        
+        return {
+            "query": query,
+            "results": [
+                {
+                    "title": r.get("title", ""),
+                    "url": r.get("href", ""),
+                    "snippet": r.get("body", "")
+                }
+                for r in results
+            ],
+            "success": True
+        }
+    except ImportError:
+        return {"error": "duckduckgo-search not installed. Run: pip install duckduckgo-search"}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+# =============================================================================
+# FINANCE TOOLS - Stock and financial data
+# =============================================================================
+
+def get_stock_price(symbol: str) -> Dict[str, Any]:
+    """Get current stock price.
+    
+    Args:
+        symbol: Stock symbol (e.g., AAPL, GOOGL)
+    
+    Returns:
+        Current stock price and info
+    """
+    try:
+        import yfinance as yf
+        
+        stock = yf.Ticker(symbol)
+        info = stock.info
+        
+        return {
+            "symbol": symbol,
+            "price": info.get("currentPrice") or info.get("regularMarketPrice"),
+            "currency": info.get("currency", "USD"),
+            "name": info.get("shortName", symbol),
+            "change": info.get("regularMarketChange"),
+            "change_percent": info.get("regularMarketChangePercent"),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "yfinance not installed. Run: pip install yfinance"}
+    except Exception as e:
+        return {"symbol": symbol, "error": str(e), "success": False}
+
+
+def get_stock_history(symbol: str, period: str = "1mo") -> Dict[str, Any]:
+    """Get historical stock data.
+    
+    Args:
+        symbol: Stock symbol
+        period: Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max)
+    
+    Returns:
+        Historical price data
+    """
+    try:
+        import yfinance as yf
+        
+        stock = yf.Ticker(symbol)
+        hist = stock.history(period=period)
+        
+        data = []
+        for date, row in hist.tail(10).iterrows():
+            data.append({
+                "date": str(date.date()),
+                "open": round(row["Open"], 2),
+                "high": round(row["High"], 2),
+                "low": round(row["Low"], 2),
+                "close": round(row["Close"], 2),
+                "volume": int(row["Volume"])
+            })
+        
+        return {
+            "symbol": symbol,
+            "period": period,
+            "data": data,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "yfinance not installed. Run: pip install yfinance"}
+    except Exception as e:
+        return {"symbol": symbol, "error": str(e), "success": False}
+
+
+# =============================================================================
+# IMAGE TOOLS - Image analysis
+# =============================================================================
+
+def analyze_image(image_path: str, question: str = "Describe this image") -> Dict[str, Any]:
+    """Analyze an image using vision model.
+    
+    Args:
+        image_path: Path to image file
+        question: Question about the image
+    
+    Returns:
+        Image analysis result
+    """
+    try:
+        from praisonaiagents import ImageAgent
+        
+        agent = ImageAgent()
+        result = agent.analyze(image_path, question)
+        
+        return {
+            "image": image_path,
+            "question": question,
+            "analysis": str(result),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"image": image_path, "error": str(e), "success": False}
+
+
+# =============================================================================
+# QUERY REWRITING TOOLS - Query optimization
+# =============================================================================
+
+def rewrite_query(query: str, strategy: str = "auto") -> Dict[str, Any]:
+    """Rewrite a query for better search results.
+    
+    Args:
+        query: Original query
+        strategy: Rewrite strategy (auto, expand, simplify, technical)
+    
+    Returns:
+        Rewritten query
+    """
+    try:
+        from praisonaiagents import QueryRewriterAgent, RewriteStrategy
+        
+        strategy_map = {
+            "auto": RewriteStrategy.AUTO,
+            "expand": RewriteStrategy.EXPAND,
+            "simplify": RewriteStrategy.SIMPLIFY,
+            "technical": RewriteStrategy.TECHNICAL
+        }
+        
+        agent = QueryRewriterAgent()
+        result = agent.rewrite(query, strategy=strategy_map.get(strategy, RewriteStrategy.AUTO))
+        
+        return {
+            "original": query,
+            "rewritten": result.primary_query,
+            "alternatives": result.alternative_queries if hasattr(result, 'alternative_queries') else [],
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def expand_prompt(prompt: str) -> Dict[str, Any]:
+    """Expand a short prompt into a detailed one.
+    
+    Args:
+        prompt: Short prompt to expand
+    
+    Returns:
+        Expanded detailed prompt
+    """
+    try:
+        from praisonaiagents import PromptExpanderAgent, ExpandStrategy
+        
+        agent = PromptExpanderAgent()
+        result = agent.expand(prompt, strategy=ExpandStrategy.AUTO)
+        
+        return {
+            "original": prompt,
+            "expanded": result.expanded_prompt,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "praisonaiagents not installed. Run: pip install praisonaiagents"}
+    except Exception as e:
+        return {"prompt": prompt, "error": str(e), "success": False}
+
+
+# =============================================================================
+# RULES TOOLS - Rules management
+# =============================================================================
+
+def rules_list() -> Dict[str, Any]:
+    """List all defined rules.
+    
+    Returns:
+        List of rules
+    """
+    try:
+        rules_dir = os.path.expanduser("~/.praisonai/rules")
+        
+        if not os.path.exists(rules_dir):
+            return {"rules": [], "count": 0, "success": True}
+        
+        rules = []
+        for f in os.listdir(rules_dir):
+            if f.endswith('.txt') or f.endswith('.md'):
+                rules.append(f[:-4] if f.endswith('.txt') else f[:-3])
+        
+        return {"rules": rules, "count": len(rules), "success": True}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+def rules_add(name: str, content: str) -> Dict[str, Any]:
+    """Add a new rule.
+    
+    Args:
+        name: Rule name
+        content: Rule content
+    
+    Returns:
+        Status of rule creation
+    """
+    try:
+        rules_dir = os.path.expanduser("~/.praisonai/rules")
+        os.makedirs(rules_dir, exist_ok=True)
+        
+        rule_file = os.path.join(rules_dir, f"{name}.txt")
+        with open(rule_file, 'w') as f:
+            f.write(content)
+        
+        return {"name": name, "file": rule_file, "success": True}
+    except Exception as e:
+        return {"name": name, "error": str(e), "success": False}
+
+
+def rules_get(name: str) -> Dict[str, Any]:
+    """Get a specific rule.
+    
+    Args:
+        name: Rule name
+    
+    Returns:
+        Rule content
+    """
+    try:
+        rules_dir = os.path.expanduser("~/.praisonai/rules")
+        
+        for ext in ['.txt', '.md']:
+            rule_file = os.path.join(rules_dir, f"{name}{ext}")
+            if os.path.exists(rule_file):
+                with open(rule_file, 'r') as f:
+                    content = f.read()
+                return {"name": name, "content": content, "success": True}
+        
+        return {"name": name, "error": "Rule not found", "success": False}
+    except Exception as e:
+        return {"name": name, "error": str(e), "success": False}
+
+
+# =============================================================================
+# HOOKS TOOLS - Event hooks
+# =============================================================================
+
+def hooks_list() -> Dict[str, Any]:
+    """List available hooks.
+    
+    Returns:
+        List of hook types
+    """
+    hooks = [
+        {"name": "on_start", "description": "Called when agent starts"},
+        {"name": "on_end", "description": "Called when agent completes"},
+        {"name": "on_tool_call", "description": "Called before tool execution"},
+        {"name": "on_tool_result", "description": "Called after tool execution"},
+        {"name": "on_error", "description": "Called on error"},
+        {"name": "on_message", "description": "Called on each message"},
+    ]
+    
+    return {"hooks": hooks, "count": len(hooks), "success": True}
+
+
+# =============================================================================
+# DOCS TOOLS - Documentation
+# =============================================================================
+
+def docs_search(query: str) -> Dict[str, Any]:
+    """Search PraisonAI documentation.
+    
+    Args:
+        query: Search query
+    
+    Returns:
+        Relevant documentation
+    """
+    docs_url = "https://docs.praison.ai"
+    
+    # Common documentation topics
+    topics = {
+        "agent": f"{docs_url}/agents",
+        "mcp": f"{docs_url}/mcp",
+        "workflow": f"{docs_url}/workflows",
+        "memory": f"{docs_url}/memory",
+        "tools": f"{docs_url}/tools",
+        "knowledge": f"{docs_url}/knowledge",
+        "research": f"{docs_url}/research",
+        "planning": f"{docs_url}/planning",
+    }
+    
+    query_lower = query.lower()
+    relevant = []
+    for topic, url in topics.items():
+        if topic in query_lower:
+            relevant.append({"topic": topic, "url": url})
+    
+    if not relevant:
+        relevant = [{"topic": "main", "url": docs_url}]
+    
+    return {
+        "query": query,
+        "results": relevant,
+        "docs_url": docs_url,
+        "success": True
+    }
+
+
+# =============================================================================
+# UPDATED TOOLS REGISTRY
+# =============================================================================
+
+# Workflow advanced tools
+WORKFLOW_ADVANCED_TOOLS = [
+    workflow_create,
+    workflow_from_yaml,
+]
+
+# Planning tools
+PLANNING_TOOLS = [
+    plan_create,
+    plan_execute,
+]
+
+# Guardrail tools
+GUARDRAIL_TOOLS = [
+    guardrail_validate,
+]
+
+# Research advanced tools
+RESEARCH_TOOLS = [
+    deep_research,
+]
+
+# Context tools
+CONTEXT_TOOLS = [
+    analyze_repository,
+    fast_context_search,
+]
+
+# Search provider tools
+SEARCH_PROVIDER_TOOLS = [
+    tavily_search,
+    duckduckgo_search,
+]
+
+# Finance tools
+FINANCE_TOOLS = [
+    get_stock_price,
+    get_stock_history,
+]
+
+# Image tools
+IMAGE_TOOLS = [
+    analyze_image,
+]
+
+# Query tools
+QUERY_TOOLS = [
+    rewrite_query,
+    expand_prompt,
+]
+
+# Rules tools
+RULES_TOOLS = [
+    rules_list,
+    rules_add,
+    rules_get,
+]
+
+# Hooks tools
+HOOKS_TOOLS = [
+    hooks_list,
+]
+
+# Docs tools
+DOCS_TOOLS = [
+    docs_search,
+]
+
+# Update ALL_TOOLS to include new tools
+ALL_TOOLS = (
+    CORE_TOOLS +
+    FILE_TOOLS +
+    AGENT_TOOLS +
+    MEMORY_TOOLS +
+    KNOWLEDGE_TOOLS +
+    TODO_TOOLS +
+    WORKFLOW_TOOLS +
+    CODE_TOOLS +
+    MCP_TOOLS +
+    SESSION_TOOLS +
+    WORKFLOW_ADVANCED_TOOLS +
+    PLANNING_TOOLS +
+    GUARDRAIL_TOOLS +
+    RESEARCH_TOOLS +
+    CONTEXT_TOOLS +
+    SEARCH_PROVIDER_TOOLS +
+    FINANCE_TOOLS +
+    IMAGE_TOOLS +
+    QUERY_TOOLS +
+    RULES_TOOLS +
+    HOOKS_TOOLS +
+    DOCS_TOOLS
+)
