@@ -7,7 +7,22 @@ for AI assistants like Claude Desktop and Cursor.
 import argparse
 from typing import List, Optional, Callable
 
-from .tools import ALL_TOOLS, CORE_TOOLS, FILE_TOOLS, AGENT_TOOLS, MEMORY_TOOLS, TODO_TOOLS, CODE_TOOLS
+from .tools import (
+    ALL_TOOLS,
+    AGENT_TOOLS,
+    WORKFLOW_TOOLS,
+    SEARCH_TOOLS,
+    CRAWL_TOOLS,
+    MEMORY_TOOLS,
+    KNOWLEDGE_TOOLS,
+    SESSION_TOOLS,
+    FILE_TOOLS,
+    CODE_TOOLS,
+    UTILITY_TOOLS,
+    PLANNING_TOOLS,
+    TODO_TOOLS,
+    MCP_TOOLS,
+)
 
 
 def create_server(
@@ -21,7 +36,6 @@ def create_server(
     Args:
         name: Name of the MCP server
         include_tools: List of tool category names to include (default: all)
-                      Options: core, file, agent, memory, knowledge, todo, workflow, code, mcp, session
         extra_tools: Additional custom tool functions to register
         debug: Enable debug logging
     
@@ -32,12 +46,19 @@ def create_server(
     
     # Tool categories
     tool_categories = {
-        "core": CORE_TOOLS,
-        "file": FILE_TOOLS,
         "agent": AGENT_TOOLS,
+        "workflow": WORKFLOW_TOOLS,
+        "search": SEARCH_TOOLS,
+        "crawl": CRAWL_TOOLS,
         "memory": MEMORY_TOOLS,
-        "todo": TODO_TOOLS,
+        "knowledge": KNOWLEDGE_TOOLS,
+        "session": SESSION_TOOLS,
+        "file": FILE_TOOLS,
         "code": CODE_TOOLS,
+        "utility": UTILITY_TOOLS,
+        "planning": PLANNING_TOOLS,
+        "todo": TODO_TOOLS,
+        "mcp": MCP_TOOLS,
     }
     
     # Select tools to include
@@ -85,7 +106,8 @@ def main():
         "--categories",
         type=str,
         nargs="+",
-        choices=["core", "file", "agent", "memory", "todo", "code", "all"],
+        choices=["agent", "workflow", "search", "crawl", "memory", "knowledge", 
+                 "session", "file", "code", "utility", "planning", "todo", "mcp", "all"],
         default=["all"],
         help="Tool categories to enable (default: all)"
     )
