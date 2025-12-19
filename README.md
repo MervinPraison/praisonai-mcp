@@ -11,8 +11,8 @@ An MCP server that exposes [PraisonAI](https://github.com/MervinPraison/PraisonA
 
 ## Features
 
-- 🛠️ **100+ Built-in Tools** - Web search, file operations, calculations, and more
-- 🤖 **AI Agents as Tools** - Expose PraisonAI agents as MCP tools
+- 🛠️ **30+ Built-in Tools** - Agents, memory, knowledge, todos, workflows, and more
+- 🤖 **AI Agents as Tools** - Run PraisonAI agents directly from MCP
 - 🔌 **Multiple Transports** - stdio (Claude Desktop) and SSE (web clients)
 - ⚡ **Easy Setup** - Works with `uvx` or `pip install`
 
@@ -27,7 +27,7 @@ uvx praisonai-mcp
 ### Using pip
 
 ```bash
-pip install praisonaiagents
+pip install praisonai-mcp
 ```
 
 ## Usage with Claude Desktop
@@ -60,38 +60,84 @@ Or with pip installation:
 
 ## Available Tools
 
-### Built-in Tools
-
+### 🔧 Core Tools
 | Tool | Description |
 |------|-------------|
-| `search_web` | Search the web using Tavily, DuckDuckGo, or other providers |
-| `calculate` | Evaluate mathematical expressions |
-| `get_weather` | Get weather information for a city |
+| `search_web` | Search the web using Tavily or DuckDuckGo |
+| `calculate` | Evaluate mathematical expressions safely |
+| `get_current_time` | Get current date/time in any timezone |
+
+### 📁 File Tools
+| Tool | Description |
+|------|-------------|
 | `read_file` | Read contents of a file |
 | `write_file` | Write content to a file |
-| `list_files` | List files in a directory |
+| `list_directory` | List files in a directory |
 
-### Custom Tools
+### 🤖 Agent Tools
+| Tool | Description |
+|------|-------------|
+| `run_agent` | Run a PraisonAI agent with a prompt |
+| `run_research` | Deep research on any topic |
+| `generate_agents_yaml` | Generate agents.yaml for a topic |
 
-Create your own tools by defining Python functions:
+### 🧠 Memory Tools
+| Tool | Description |
+|------|-------------|
+| `memory_add` | Add content to memory store |
+| `memory_search` | Search memories |
+| `memory_list` | List all memories |
+| `memory_clear` | Clear all memories |
 
-```python
-from praisonaiagents.mcp import ToolsMCPServer
+### 📚 Knowledge Tools
+| Tool | Description |
+|------|-------------|
+| `knowledge_add` | Add to knowledge base |
+| `knowledge_search` | Search knowledge base |
 
-def my_custom_tool(query: str) -> str:
-    """Search for information.
-    
-    Args:
-        query: The search query
-    
-    Returns:
-        Search results
-    """
-    return f"Results for: {query}"
+### ✅ Todo Tools
+| Tool | Description |
+|------|-------------|
+| `todo_add` | Add a task to todo list |
+| `todo_list` | List all tasks |
+| `todo_complete` | Mark task as completed |
 
-server = ToolsMCPServer(name="my-tools")
-server.register_tool(my_custom_tool)
-server.run()
+### 🔄 Workflow Tools
+| Tool | Description |
+|------|-------------|
+| `workflow_run` | Run multi-step workflows |
+
+### 💻 Code Tools
+| Tool | Description |
+|------|-------------|
+| `run_python` | Execute Python code |
+| `run_shell` | Execute shell commands |
+| `git_commit` | Create git commits (AI-generated messages) |
+
+### 🔌 MCP Tools
+| Tool | Description |
+|------|-------------|
+| `mcp_list_servers` | List available MCP servers |
+| `mcp_connect` | Connect to an MCP server |
+
+### 💾 Session Tools
+| Tool | Description |
+|------|-------------|
+| `session_save` | Save current session |
+| `session_load` | Load a saved session |
+| `session_list` | List all sessions |
+
+## Running with Specific Categories
+
+```bash
+# Only core and file tools
+python -m praisonai_mcp --categories core file
+
+# Only agent tools
+python -m praisonai_mcp --categories agent
+
+# All tools (default)
+python -m praisonai_mcp --categories all
 ```
 
 ## Running as SSE Server
