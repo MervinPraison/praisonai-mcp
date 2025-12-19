@@ -2395,7 +2395,7 @@ def list_processes(filter_name: str = None) -> Dict[str, Any]:
                     "pid": info['pid'],
                     "name": info['name'],
                     "cpu": info['cpu_percent'],
-                    "memory": round(info['memory_percent'], 2)
+                    "memory": round(info['memory_percent'] or 0, 2)
                 })
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
