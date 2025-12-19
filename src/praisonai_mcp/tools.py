@@ -2795,3 +2795,203 @@ ALL_TOOLS = (
     N8N_TOOLS +
     AUTO_MEMORY_TOOLS
 )
+
+
+# =============================================================================
+# CRAWL4AI TOOLS - Web scraping and crawling
+# =============================================================================
+
+def crawl4ai_scrape(url: str, extract_content: bool = True) -> Dict[str, Any]:
+    """Scrape a webpage using Crawl4AI.
+    
+    Args:
+        url: URL to scrape
+        extract_content: Whether to extract main content (default: True)
+    
+    Returns:
+        Scraped content from the webpage
+    """
+    try:
+        from crawl4ai import WebCrawler
+        
+        crawler = WebCrawler()
+        crawler.warmup()
+        
+        result = crawler.run(url=url)
+        
+        return {
+            "url": url,
+            "title": result.metadata.get("title", "") if result.metadata else "",
+            "content": result.markdown[:5000] if result.markdown else "",
+            "success": result.success,
+        }
+    except ImportError:
+        return {"error": "crawl4ai not installed. Run: pip install crawl4ai"}
+    except Exception as e:
+        return {"url": url, "error": str(e), "success": False}
+
+
+def crawl4ai_extract(url: str, schema: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Extract structured data from a webpage using Crawl4AI.
+    
+    Args:
+        url: URL to extract from
+        schema: Optional JSON schema for extraction
+    
+    Returns:
+        Extracted structured data
+    """
+    try:
+        from crawl4ai import WebCrawler
+        from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
+        
+        crawler = WebCrawler()
+        crawler.warmup()
+        
+        if schema:
+            strategy = JsonCssExtractionStrategy(schema)
+            result = crawler.run(url=url, extraction_strategy=strategy)
+            return {
+                "url": url,
+                "data": json.loads(result.extracted_content) if result.extracted_content else {},
+                "success": result.success,
+            }
+        else:
+            result = crawler.run(url=url)
+            return {
+                "url": url,
+                "content": result.markdown[:5000] if result.markdown else "",
+                "success": result.success,
+            }
+    except ImportError:
+        return {"error": "crawl4ai not installed. Run: pip install crawl4ai"}
+    except Exception as e:
+        return {"url": url, "error": str(e), "success": False}
+
+
+def scrape_page(url: str) -> Dict[str, Any]:
+    """Scrape a webpage and extract text content.
+    
+    Args:
+        url: URL to scrape
+    
+    Returns:
+        Page content and metadata
+    """
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+        
+        response = requests.get(url, timeout=10, headers={
+            "User-Agent": "Mozilla/5.0 (compatible; PraisonAI/1.0)"
+        })
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.decompose()
+        
+        text = soup.get_text(separator='\n', strip=True)
+        
+        return {
+            "url": url,
+            "title": soup.title.string if soup.title else "",
+            "content": text[:5000],
+            "status_code": response.status_code,
+            "success": True
+        }
+    except ImportError:
+        return {"error": "requests/beautifulsoup4 not installed"}
+    except Exception as e:
+        return {"url": url, "error": str(e), "success": False}
+
+
+def extract_links(url: str, filter_pattern: str = None) -> Dict[str, Any]:
+    """Extract all links from a webpage.
+    
+    Args:
+        url: URL to extract links from
+        filter_pattern: Optional regex pattern to filter links
+    
+    Returns:
+        List of extracted links
+    """
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+        import re
+        from urllib.parse import urljoin
+        
+        response = requests.get(url, timeout=10, headers={
+            "User-Agent": "Mozilla/5.0 (compatible; PraisonAI/1.0)"
+        })
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        links = []
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            full_url = urljoin(url, href)
+            
+            if filter_pattern:
+                if re.search(filter_pattern, full_url):
+                    links.append({"url": full_url, "text": a.get_text(strip=True)[:100]})
+            else:
+                links.append({"url": full_url, "text": a.get_text(strip=True)[:100]})
+        
+        return {
+            "url": url,
+            "links": links[:100],  # Limit to 100 links
+            "count": len(links),
+            "success": True
+        }
+    except ImportError:
+        return {"error": "requests/beautifulsoup4 not installed"}
+    except Exception as e:
+        return {"url": url, "error": str(e), "success": False}
+
+
+# Crawl/Scrape tools
+CRAWL_TOOLS = [
+    crawl4ai_scrape,
+    crawl4ai_extract,
+    scrape_page,
+    extract_links,
+    web_crawl,  # Already defined earlier
+]
+
+# Update ALL_TOOLS
+ALL_TOOLS = (
+    CORE_TOOLS +
+    FILE_TOOLS +
+    AGENT_TOOLS +
+    MEMORY_TOOLS +
+    KNOWLEDGE_TOOLS +
+    TODO_TOOLS +
+    WORKFLOW_TOOLS +
+    CODE_TOOLS +
+    MCP_TOOLS +
+    SESSION_TOOLS +
+    WORKFLOW_ADVANCED_TOOLS +
+    PLANNING_TOOLS +
+    GUARDRAIL_TOOLS +
+    RESEARCH_TOOLS +
+    CONTEXT_TOOLS +
+    SEARCH_PROVIDER_TOOLS +
+    FINANCE_TOOLS +
+    IMAGE_TOOLS +
+    QUERY_TOOLS +
+    RULES_TOOLS +
+    HOOKS_TOOLS +
+    DOCS_TOOLS +
+    CODE_EDITING_TOOLS +
+    AGENT_TYPE_TOOLS +
+    DATA_FORMAT_TOOLS +
+    ADVANCED_SEARCH_TOOLS +
+    CALCULATOR_ADVANCED_TOOLS +
+    SYSTEM_INFO_TOOLS +
+    TELEMETRY_TOOLS +
+    ROUTER_TOOLS +
+    N8N_TOOLS +
+    AUTO_MEMORY_TOOLS +
+    CRAWL_TOOLS
+)

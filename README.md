@@ -13,7 +13,7 @@ An MCP server that exposes [PraisonAI](https://github.com/MervinPraison/PraisonA
 
 - 🤖 **AI Agents as Tools** - Run PraisonAI agents directly from MCP
 - 🔄 **Workflow Orchestration** - Multi-step agent workflows
-- 🛠️ **70 Built-in Tools** - Complete coverage of all PraisonAI features
+- 🛠️ **75 Built-in Tools** - Complete coverage of all PraisonAI features
 - ⚡ **Easy Setup** - Works with `uvx` or `pip install`
 
 ## Installation
@@ -28,7 +28,7 @@ pip install praisonai-mcp
 
 ---
 
-## Available Tools (70 Total)
+## Available Tools (75 Total)
 
 ### 🤖 Agent Tools (Primary)
 
@@ -55,9 +55,33 @@ Orchestrate multi-step agent workflows:
 
 ---
 
-### 📦 Supporting Tools
+### 🌐 Search Tools
 
-These tools are used by agents and workflows:
+Web search across multiple providers:
+
+| Tool | Description |
+|------|-------------|
+| `search_web` | Search the web (auto-selects provider) |
+| `tavily_search` | Search using Tavily API |
+| `duckduckgo_search` | Search using DuckDuckGo |
+| `wikipedia_search` | Search Wikipedia |
+| `arxiv_search` | Search arXiv academic papers |
+
+### 🕷️ Crawl & Scrape Tools
+
+Web crawling and content extraction:
+
+| Tool | Description |
+|------|-------------|
+| `crawl4ai_scrape` | Scrape webpage using Crawl4AI |
+| `crawl4ai_extract` | Extract structured data with Crawl4AI |
+| `scrape_page` | Scrape webpage and extract text |
+| `extract_links` | Extract all links from a webpage |
+| `web_crawl` | Crawl website and extract content |
+
+---
+
+### 📦 Supporting Tools
 
 #### 🧠 Memory & Knowledge
 | Tool | Description |
@@ -78,16 +102,6 @@ These tools are used by agents and workflows:
 | `deep_research` | Deep research with iterations |
 | `analyze_repository` | Analyze a repository |
 | `fast_context_search` | Search codebase for context |
-
-#### 🌐 Search & Web
-| Tool | Description |
-|------|-------------|
-| `search_web` | Search the web |
-| `tavily_search` | Search using Tavily API |
-| `duckduckgo_search` | Search using DuckDuckGo |
-| `wikipedia_search` | Search Wikipedia |
-| `arxiv_search` | Search arXiv papers |
-| `web_crawl` | Crawl and extract web content |
 
 #### 💻 Code & Execution
 | Tool | Description |
