@@ -7,13 +7,13 @@
   <a href="https://registry.modelcontextprotocol.io/servers/io.github.MervinPraison/praisonai"><img src="https://img.shields.io/badge/MCP-Registry-blue" alt="MCP Registry" /></a>
 </p>
 
-An MCP server that exposes [PraisonAI](https://github.com/MervinPraison/PraisonAI) tools and agents as MCP tools for use with Claude Desktop, Cursor, and other MCP clients.
+An MCP server that exposes [PraisonAI](https://github.com/MervinPraison/PraisonAI) tools and agents as MCP tools for use with Claude Desktop, Cursor, VS Code, Windsurf, and other MCP clients.
 
 ## Features
 
 - 🛠️ **70 Built-in Tools** - Complete coverage of all PraisonAI features
 - 🤖 **AI Agents as Tools** - Run PraisonAI agents directly from MCP
-- 🔌 **Multiple Transports** - stdio (Claude Desktop) and SSE (web clients)
+- 🔌 **Multiple Transports** - stdio and SSE support
 - ⚡ **Easy Setup** - Works with `uvx` or `pip install`
 
 ## Installation
@@ -26,206 +26,311 @@ uvx praisonai-mcp
 pip install praisonai-mcp
 ```
 
-## Usage with Claude Desktop
+---
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+## MCP Client Configurations
+
+### Claude Desktop
+
+**Config file location:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "praisonai": {
       "command": "uvx",
-      "args": ["praisonai-mcp"]
+      "args": ["praisonai-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key",
+        "TAVILY_API_KEY": "your-tavily-api-key"
+      }
     }
   }
 }
 ```
 
-## Available Tools (70 Total)
+---
 
-### 🔧 Core Tools
-| Tool | Description |
-|------|-------------|
-| `search_web` | Search the web using Tavily or DuckDuckGo |
-| `calculate` | Evaluate mathematical expressions |
-| `get_current_time` | Get current date/time in any timezone |
+### VS Code (GitHub Copilot)
 
-### 📁 File Tools
-| Tool | Description |
-|------|-------------|
-| `read_file` | Read file contents |
-| `write_file` | Write content to file |
-| `list_directory` | List directory contents |
+**Config file location:** `.vscode/mcp.json` in your workspace or user settings
 
-### 🤖 Agent Tools
-| Tool | Description |
-|------|-------------|
-| `run_agent` | Run a PraisonAI agent |
-| `run_research` | Deep research on any topic |
-| `generate_agents_yaml` | Generate agents.yaml |
-| `run_auto_agents` | Run auto-generated agents |
-| `run_handoff` | Run with agent handoff |
+```json
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "openai-key",
+      "description": "OpenAI API Key",
+      "password": true
+    },
+    {
+      "type": "promptString",
+      "id": "tavily-key",
+      "description": "Tavily API Key",
+      "password": true
+    }
+  ],
+  "servers": {
+    "praisonai": {
+      "command": "uvx",
+      "args": ["praisonai-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "${input:openai-key}",
+        "TAVILY_API_KEY": "${input:tavily-key}"
+      }
+    }
+  }
+}
+```
 
-### 🧠 Memory Tools
-| Tool | Description |
-|------|-------------|
-| `memory_add` | Add to memory store |
-| `memory_search` | Search memories |
-| `memory_list` | List all memories |
-| `memory_clear` | Clear memories |
-| `auto_extract_memories` | Auto-extract memories from text |
+> **Note:** VS Code securely prompts for API keys on first use and stores them for subsequent sessions.
 
-### 📚 Knowledge Tools
-| Tool | Description |
-|------|-------------|
-| `knowledge_add` | Add to knowledge base |
-| `knowledge_search` | Search knowledge base |
+---
 
-### ✅ Todo Tools
-| Tool | Description |
-|------|-------------|
-| `todo_add` | Add task |
-| `todo_list` | List tasks |
-| `todo_complete` | Complete task |
+### Cursor
 
-### 🔄 Workflow Tools
-| Tool | Description |
-|------|-------------|
-| `workflow_run` | Run workflow |
-| `workflow_create` | Create workflow |
-| `workflow_from_yaml` | Create from YAML |
-| `export_to_n8n` | Export to n8n format |
+**Config file location:** `~/.cursor/mcp.json`
 
-### 💻 Code Tools
-| Tool | Description |
-|------|-------------|
-| `run_python` | Execute Python code |
-| `run_shell` | Execute shell commands |
-| `git_commit` | Create git commits |
-| `code_apply_diff` | Apply SEARCH/REPLACE diff |
-| `code_search_replace` | Search and replace in file |
+```json
+{
+  "mcpServers": {
+    "praisonai": {
+      "command": "uvx",
+      "args": ["praisonai-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key",
+        "TAVILY_API_KEY": "your-tavily-api-key"
+      }
+    }
+  }
+}
+```
 
-### 📊 Data Format Tools
-| Tool | Description |
-|------|-------------|
-| `read_csv` | Read CSV file |
-| `write_csv` | Write CSV file |
-| `read_json_file` | Read JSON file |
-| `write_json_file` | Write JSON file |
-| `read_yaml_file` | Read YAML file |
-| `write_yaml_file` | Write YAML file |
+---
 
-### 🌐 Search Tools
-| Tool | Description |
-|------|-------------|
-| `tavily_search` | Search using Tavily |
-| `duckduckgo_search` | Search using DuckDuckGo |
-| `wikipedia_search` | Search Wikipedia |
-| `arxiv_search` | Search arXiv papers |
-| `web_crawl` | Crawl and extract web content |
+### Windsurf
 
-### 📈 Finance Tools
-| Tool | Description |
-|------|-------------|
-| `get_stock_price` | Get current stock price |
-| `get_stock_history` | Get historical stock data |
+**Config file location:** `~/.codeium/windsurf/mcp_config.json`
 
-### 🧮 Calculator Tools
-| Tool | Description |
-|------|-------------|
-| `solve_equation` | Solve mathematical equations |
-| `convert_units` | Convert between units |
-| `calculate_statistics` | Calculate statistics |
+```json
+{
+  "mcpServers": {
+    "praisonai": {
+      "command": "uvx",
+      "args": ["praisonai-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key",
+        "TAVILY_API_KEY": "your-tavily-api-key"
+      }
+    }
+  }
+}
+```
 
-### 💾 Session Tools
-| Tool | Description |
-|------|-------------|
-| `session_save` | Save session |
-| `session_load` | Load session |
-| `session_list` | List sessions |
+> **Tip:** You can also add MCP servers via Windsurf Settings > Cascade > Plugins.
 
-### 📋 Planning Tools
-| Tool | Description |
-|------|-------------|
-| `plan_create` | Create a plan |
-| `plan_execute` | Execute a plan |
+---
 
-### 🛡️ Guardrail Tools
-| Tool | Description |
-|------|-------------|
-| `guardrail_validate` | Validate content |
+### Cline (VS Code Extension)
 
-### 🔬 Research Tools
-| Tool | Description |
-|------|-------------|
-| `deep_research` | Deep research with iterations |
+**Config file location:** Managed via Cline settings in VS Code
 
-### 🔍 Context Tools
-| Tool | Description |
-|------|-------------|
-| `analyze_repository` | Analyze repository |
-| `fast_context_search` | Search codebase |
+1. Open VS Code Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Search for "Cline: MCP Servers"
+3. Add configuration:
 
-### 🖼️ Image Tools
-| Tool | Description |
-|------|-------------|
-| `analyze_image` | Analyze image |
+```json
+{
+  "mcpServers": {
+    "praisonai": {
+      "command": "uvx",
+      "args": ["praisonai-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key",
+        "TAVILY_API_KEY": "your-tavily-api-key"
+      }
+    }
+  }
+}
+```
 
-### ✍️ Query Tools
-| Tool | Description |
-|------|-------------|
-| `rewrite_query` | Rewrite query |
-| `expand_prompt` | Expand prompt |
+---
 
-### 📜 Rules Tools
-| Tool | Description |
-|------|-------------|
-| `rules_list` | List rules |
-| `rules_add` | Add rule |
-| `rules_get` | Get rule |
+### Continue (VS Code/JetBrains)
 
-### 🔌 MCP Tools
-| Tool | Description |
-|------|-------------|
-| `mcp_list_servers` | List MCP servers |
-| `mcp_connect` | Connect to MCP server |
+**Config file location:** `~/.continue/config.json`
 
-### 🖥️ System Tools
-| Tool | Description |
-|------|-------------|
-| `list_processes` | List running processes |
-| `get_system_info` | Get system information |
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["praisonai-mcp"]
+        },
+        "env": {
+          "OPENAI_API_KEY": "your-openai-api-key",
+          "TAVILY_API_KEY": "your-tavily-api-key"
+        }
+      }
+    ]
+  }
+}
+```
 
-### 📊 Telemetry Tools
-| Tool | Description |
-|------|-------------|
-| `track_metrics` | Track metrics event |
-| `get_metrics` | Get tracked metrics |
+---
 
-### 🎯 Router Tools
-| Tool | Description |
-|------|-------------|
-| `select_model` | Select best model for task |
+### Zed
 
-### 🪝 Hooks & Docs
-| Tool | Description |
-|------|-------------|
-| `hooks_list` | List available hooks |
-| `docs_search` | Search documentation |
+**Config file location:** `~/.config/zed/settings.json`
+
+```json
+{
+  "context_servers": {
+    "praisonai": {
+      "command": {
+        "path": "uvx",
+        "args": ["praisonai-mcp"]
+      },
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key",
+        "TAVILY_API_KEY": "your-tavily-api-key"
+      }
+    }
+  }
+}
+```
+
+---
+
+### Claude Code (CLI)
+
+```bash
+# Add the MCP server
+claude mcp add praisonai -- uvx praisonai-mcp
+
+# With environment variables
+OPENAI_API_KEY=your-key claude mcp add praisonai -- uvx praisonai-mcp
+```
+
+---
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `OPENAI_API_KEY` | OpenAI API key |
-| `TAVILY_API_KEY` | Tavily search API key |
-| `BRAVE_API_KEY` | Brave Search API key |
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI API key for AI-powered tools | For agent tools |
+| `TAVILY_API_KEY` | Tavily API key for web search | For tavily_search |
+| `BRAVE_API_KEY` | Brave Search API key | Optional |
+
+---
+
+## Available Tools (70 Total)
+
+### 🔧 Core Tools
+`search_web`, `calculate`, `get_current_time`
+
+### 📁 File Tools
+`read_file`, `write_file`, `list_directory`
+
+### 🤖 Agent Tools
+`run_agent`, `run_research`, `generate_agents_yaml`, `run_auto_agents`, `run_handoff`
+
+### 🧠 Memory Tools
+`memory_add`, `memory_search`, `memory_list`, `memory_clear`, `auto_extract_memories`
+
+### 📚 Knowledge Tools
+`knowledge_add`, `knowledge_search`
+
+### ✅ Todo Tools
+`todo_add`, `todo_list`, `todo_complete`
+
+### 🔄 Workflow Tools
+`workflow_run`, `workflow_create`, `workflow_from_yaml`, `export_to_n8n`
+
+### 💻 Code Tools
+`run_python`, `run_shell`, `git_commit`, `code_apply_diff`, `code_search_replace`
+
+### 📊 Data Format Tools
+`read_csv`, `write_csv`, `read_json_file`, `write_json_file`, `read_yaml_file`, `write_yaml_file`
+
+### 🌐 Search Tools
+`tavily_search`, `duckduckgo_search`, `wikipedia_search`, `arxiv_search`, `web_crawl`
+
+### 📈 Finance Tools
+`get_stock_price`, `get_stock_history`
+
+### 🧮 Calculator Tools
+`solve_equation`, `convert_units`, `calculate_statistics`
+
+### 💾 Session Tools
+`session_save`, `session_load`, `session_list`
+
+### 📋 Planning Tools
+`plan_create`, `plan_execute`
+
+### 🛡️ Guardrail Tools
+`guardrail_validate`
+
+### 🔬 Research Tools
+`deep_research`
+
+### 🔍 Context Tools
+`analyze_repository`, `fast_context_search`
+
+### 🖼️ Image Tools
+`analyze_image`
+
+### ✍️ Query Tools
+`rewrite_query`, `expand_prompt`
+
+### 📜 Rules Tools
+`rules_list`, `rules_add`, `rules_get`
+
+### 🔌 MCP Tools
+`mcp_list_servers`, `mcp_connect`
+
+### 🖥️ System Tools
+`list_processes`, `get_system_info`
+
+### 📊 Telemetry Tools
+`track_metrics`, `get_metrics`
+
+### 🎯 Router Tools
+`select_model`
+
+### 🪝 Hooks & Docs
+`hooks_list`, `docs_search`
+
+---
+
+## Running as SSE Server
+
+For web clients or remote access:
+
+```bash
+python -m praisonai_mcp --sse --port 8080
+```
+
+---
 
 ## Related Projects
 
 - [PraisonAI](https://github.com/MervinPraison/PraisonAI) - AI Agents Framework
-- [MCP Registry](https://registry.modelcontextprotocol.io/servers/io.github.MervinPraison/praisonai)
+- [PraisonAI Agents](https://pypi.org/project/praisonaiagents/) - Lightweight agents package
+- [MCP Registry](https://registry.modelcontextprotocol.io/servers/io.github.MervinPraison/praisonai) - Official MCP Registry listing
 
 ## License
 
 MIT License
+
+## Links
+
+- 📖 [Documentation](https://docs.praison.ai/mcp)
+- 🐛 [Issues](https://github.com/MervinPraison/praisonai-mcp/issues)
+- 💬 [Discussions](https://github.com/MervinPraison/PraisonAI/discussions)
