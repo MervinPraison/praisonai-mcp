@@ -13,7 +13,7 @@ An MCP server that exposes [PraisonAI](https://github.com/MervinPraison/PraisonA
 
 - 🤖 **AI Agents as Tools** - Run PraisonAI agents directly from MCP
 - 🔄 **Workflow Orchestration** - Multi-step agent workflows
-- 🛠️ **75 Built-in Tools** - Complete coverage of all PraisonAI features
+- 🛠️ **64 Built-in Tools** - Complete coverage of all PraisonAI features
 - ⚡ **Easy Setup** - Works with `uvx` or `pip install`
 
 ## Installation
@@ -28,7 +28,7 @@ pip install praisonai-mcp
 
 ---
 
-## Available Tools (75 Total)
+## Available Tools (64 Total)
 
 ### 🤖 Agent Tools (Primary)
 
@@ -55,17 +55,29 @@ Orchestrate multi-step agent workflows:
 
 ---
 
-### 🌐 Search Tools
+### 🌐 Search Tools (13 tools)
 
-Web search across multiple providers:
+Unified web search with automatic fallback across multiple providers:
 
 | Tool | Description |
 |------|-------------|
-| `search_web` | Search the web (auto-selects provider) |
-| `tavily_search` | Search using Tavily API |
-| `duckduckgo_search` | Search using DuckDuckGo |
-| `wikipedia_search` | Search Wikipedia |
-| `arxiv_search` | Search arXiv academic papers |
+| `search_web` | **Unified search** - Auto-fallback across providers |
+| `get_search_providers` | List available providers and their status |
+| **Tavily** | |
+| `tavily_search` | AI-powered search (requires `TAVILY_API_KEY`) |
+| `tavily_extract` | Extract content from URLs |
+| **Exa** | |
+| `exa_search` | Semantic search (requires `EXA_API_KEY`) |
+| `exa_search_contents` | Search with full content retrieval |
+| `exa_find_similar` | Find similar pages to a URL |
+| **You.com** | |
+| `ydc_search` | AI search with LLM-ready snippets (requires `YDC_API_KEY`) |
+| `ydc_news` | Live news search |
+| **Free Providers** | |
+| `duckduckgo_search` | DuckDuckGo search (no API key) |
+| `wikipedia_search` | Wikipedia search |
+| `arxiv_search` | arXiv academic papers |
+| `searxng_search` | Self-hosted SearxNG meta search |
 
 ### 🕷️ Crawl & Scrape Tools
 
@@ -339,8 +351,10 @@ claude mcp add praisonai -- uvx praisonai-mcp
 | Variable | Description | Required For |
 |----------|-------------|--------------|
 | `OPENAI_API_KEY` | OpenAI API key | Agent tools |
-| `TAVILY_API_KEY` | Tavily search API key | tavily_search |
-| `BRAVE_API_KEY` | Brave Search API key | Optional |
+| `TAVILY_API_KEY` | Tavily search API key | tavily_search, tavily_extract |
+| `EXA_API_KEY` | Exa search API key | exa_search, exa_search_contents, exa_find_similar |
+| `YDC_API_KEY` | You.com API key | ydc_search, ydc_news |
+| `SEARXNG_URL` | SearxNG instance URL | searxng_search (optional) |
 
 ---
 

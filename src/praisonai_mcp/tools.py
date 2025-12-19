@@ -271,70 +271,305 @@ def export_to_n8n(workflow_name: str, steps: List[str]) -> Dict[str, Any]:
 
 
 # =============================================================================
-# SEARCH TOOLS - Using praisonaiagents.tools
+# SEARCH TOOLS - Unified web search with multiple providers
 # =============================================================================
 
-def search_web(query: str, max_results: int = 5) -> Dict[str, Any]:
-    """Search the web for information.
+def search_web(query: str, max_results: int = 5, providers: List[str] = None) -> Dict[str, Any]:
+    """Search the web using multiple providers with automatic fallback.
+    
+    Tries each search provider in order until one succeeds. Provider priority:
+    1. Tavily (requires TAVILY_API_KEY)
+    2. Exa (requires EXA_API_KEY)
+    3. You.com (requires YDC_API_KEY)
+    4. DuckDuckGo (no API key needed)
+    5. SearxNG (requires SEARXNG_URL)
     
     Args:
         query: Search query
-        max_results: Maximum results
+        max_results: Maximum results (default: 5)
+        providers: Optional list of providers to try in order
+                  Options: ["tavily", "exa", "youdotcom", "duckduckgo", "searxng"]
     
     Returns:
-        Search results
+        Search results with provider info
     """
     try:
-        from praisonaiagents.tools.duckduckgo_tools import internet_search
-        results = internet_search(query, max_results=max_results)
-        return {"query": query, "results": results, "success": True}
+        from praisonaiagents.tools.web_search import search_web as _search_web
+        results = _search_web(query, max_results=max_results, providers=providers)
+        
+        # Check if results contain error
+        if results and isinstance(results, list) and "error" in results[0]:
+            return {"query": query, "error": results[0]["error"], "success": False}
+        
+        provider = results[0].get("provider", "unknown") if results else "unknown"
+        return {
+            "query": query,
+            "results": results,
+            "provider": provider,
+            "count": len(results),
+            "success": True
+        }
     except ImportError:
+        # Fallback to DuckDuckGo
         try:
             from duckduckgo_search import DDGS
-            with DDGS() as ddgs:
-                results = list(ddgs.text(query, max_results=max_results))
-                return {"query": query, "results": results, "success": True}
-        except:
-            return {"query": query, "error": "Search not available", "success": False}
+            ddgs = DDGS()
+            results = []
+            for r in ddgs.text(query, max_results=max_results):
+                results.append({
+                    "title": r.get("title", ""),
+                    "url": r.get("href", ""),
+                    "snippet": r.get("body", ""),
+                    "provider": "duckduckgo"
+                })
+            return {"query": query, "results": results, "provider": "duckduckgo", "success": True}
+        except Exception:
+            return {"query": query, "error": "No search providers available", "success": False}
     except Exception as e:
         return {"query": query, "error": str(e), "success": False}
 
 
-def tavily_search(query: str, max_results: int = 5) -> Dict[str, Any]:
+def get_search_providers() -> Dict[str, Any]:
+    """Get list of available search providers and their status.
+    
+    Returns:
+        List of providers with availability status
+    """
+    try:
+        from praisonaiagents.tools.web_search import get_available_providers
+        providers = get_available_providers()
+        return {"providers": providers, "count": len(providers), "success": True}
+    except ImportError:
+        # Manual check
+        providers = []
+        
+        # Check Tavily
+        providers.append({
+            "name": "tavily",
+            "available": bool(os.environ.get("TAVILY_API_KEY")),
+            "reason": None if os.environ.get("TAVILY_API_KEY") else "TAVILY_API_KEY not set"
+        })
+        
+        # Check Exa
+        providers.append({
+            "name": "exa",
+            "available": bool(os.environ.get("EXA_API_KEY")),
+            "reason": None if os.environ.get("EXA_API_KEY") else "EXA_API_KEY not set"
+        })
+        
+        # Check You.com
+        providers.append({
+            "name": "youdotcom",
+            "available": bool(os.environ.get("YDC_API_KEY")),
+            "reason": None if os.environ.get("YDC_API_KEY") else "YDC_API_KEY not set"
+        })
+        
+        # DuckDuckGo (always available if package installed)
+        try:
+            from duckduckgo_search import DDGS  # noqa
+            providers.append({"name": "duckduckgo", "available": True, "reason": None})
+        except ImportError:
+            providers.append({"name": "duckduckgo", "available": False, "reason": "duckduckgo_search not installed"})
+        
+        return {"providers": providers, "count": len(providers), "success": True}
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
+def tavily_search(query: str, max_results: int = 5, search_depth: str = "basic") -> Dict[str, Any]:
     """Search using Tavily API.
+    
+    Tavily provides AI-powered web search optimized for LLM applications.
+    Requires TAVILY_API_KEY environment variable.
     
     Args:
         query: Search query
-        max_results: Maximum results
+        max_results: Maximum results (default: 5)
+        search_depth: "basic" or "advanced" (default: basic)
     
     Returns:
         Tavily search results
     """
     try:
         from praisonaiagents.tools.tavily_tools import tavily_search as _tavily
-        results = _tavily(query, max_results=max_results)
-        return {"query": query, "results": results, "success": True}
+        results = _tavily(query, max_results=max_results, search_depth=search_depth)
+        return {"query": query, "results": results, "provider": "tavily", "success": True}
     except ImportError:
         api_key = os.environ.get("TAVILY_API_KEY")
         if not api_key:
-            return {"error": "TAVILY_API_KEY not set"}
+            return {"error": "TAVILY_API_KEY not set. Get one at https://tavily.com", "success": False}
         try:
             from tavily import TavilyClient
             client = TavilyClient(api_key=api_key)
-            response = client.search(query, max_results=max_results)
-            return {"query": query, "results": response.get("results", []), "success": True}
-        except:
-            return {"error": "Tavily not available"}
+            response = client.search(query, max_results=max_results, search_depth=search_depth)
+            return {"query": query, "results": response.get("results", []), "provider": "tavily", "success": True}
+        except Exception as e:
+            return {"error": f"Tavily error: {str(e)}", "success": False}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def tavily_extract(urls: List[str]) -> Dict[str, Any]:
+    """Extract content from URLs using Tavily.
+    
+    Args:
+        urls: List of URLs to extract content from
+    
+    Returns:
+        Extracted content
+    """
+    try:
+        from praisonaiagents.tools.tavily_tools import tavily_extract as _extract
+        results = _extract(urls)
+        return {"urls": urls, "results": results, "success": True}
+    except ImportError:
+        return {"error": "tavily-python not installed. Run: pip install tavily-python", "success": False}
+    except Exception as e:
+        return {"urls": urls, "error": str(e), "success": False}
+
+
+def exa_search(query: str, num_results: int = 10, search_type: str = "auto") -> Dict[str, Any]:
+    """Search using Exa API.
+    
+    Exa provides AI-powered web search with semantic understanding.
+    Requires EXA_API_KEY environment variable.
+    
+    Args:
+        query: Search query
+        num_results: Number of results (default: 10)
+        search_type: "auto", "neural", "fast", or "deep" (default: auto)
+    
+    Returns:
+        Exa search results
+    """
+    try:
+        from praisonaiagents.tools.exa_tools import exa_search as _exa
+        results = _exa(query, num_results=num_results, type=search_type)
+        return {"query": query, "results": results, "provider": "exa", "success": True}
+    except ImportError:
+        api_key = os.environ.get("EXA_API_KEY")
+        if not api_key:
+            return {"error": "EXA_API_KEY not set. Get one at https://exa.ai", "success": False}
+        try:
+            from exa_py import Exa
+            client = Exa(api_key)
+            response = client.search(query, num_results=num_results, type=search_type)
+            results = [{"url": r.url, "title": getattr(r, "title", "")} for r in response.results]
+            return {"query": query, "results": results, "provider": "exa", "success": True}
+        except Exception as e:
+            return {"error": f"Exa error: {str(e)}", "success": False}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def exa_search_contents(query: str, num_results: int = 5, text: bool = True) -> Dict[str, Any]:
+    """Search Exa and retrieve content from results.
+    
+    Args:
+        query: Search query
+        num_results: Number of results (default: 5)
+        text: Include full text content (default: True)
+    
+    Returns:
+        Search results with content
+    """
+    try:
+        from praisonaiagents.tools.exa_tools import exa_search_contents as _exa_contents
+        results = _exa_contents(query, num_results=num_results, text=text)
+        return {"query": query, "results": results, "provider": "exa", "success": True}
+    except ImportError:
+        return {"error": "exa_py not installed. Run: pip install exa_py", "success": False}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def exa_find_similar(url: str, num_results: int = 10) -> Dict[str, Any]:
+    """Find similar pages to a given URL using Exa.
+    
+    Args:
+        url: URL to find similar pages for
+        num_results: Number of results (default: 10)
+    
+    Returns:
+        Similar pages
+    """
+    try:
+        from praisonaiagents.tools.exa_tools import exa_find_similar as _find_similar
+        results = _find_similar(url, num_results=num_results)
+        return {"url": url, "results": results, "provider": "exa", "success": True}
+    except ImportError:
+        return {"error": "exa_py not installed. Run: pip install exa_py", "success": False}
+    except Exception as e:
+        return {"url": url, "error": str(e), "success": False}
+
+
+def ydc_search(query: str, count: int = 10) -> Dict[str, Any]:
+    """Search using You.com API.
+    
+    You.com provides AI-powered search with LLM-ready snippets.
+    Requires YDC_API_KEY environment variable.
+    
+    Args:
+        query: Search query
+        count: Number of results (default: 10)
+    
+    Returns:
+        You.com search results
+    """
+    try:
+        from praisonaiagents.tools.youdotcom_tools import ydc_search as _ydc
+        results = _ydc(query, count=count)
+        return {"query": query, "results": results, "provider": "youdotcom", "success": True}
+    except ImportError:
+        api_key = os.environ.get("YDC_API_KEY")
+        if not api_key:
+            return {"error": "YDC_API_KEY not set. Get one at https://you.com/api", "success": False}
+        try:
+            from youdotcom import You
+            client = You(api_key_auth=api_key)
+            response = client.search.unified(query=query, count=count)
+            results = []
+            if hasattr(response, 'results'):
+                web_results = getattr(response.results, 'web', []) or []
+                for r in web_results[:count]:
+                    results.append({
+                        "title": getattr(r, "title", ""),
+                        "url": getattr(r, "url", ""),
+                        "snippet": getattr(r, "description", "")
+                    })
+            return {"query": query, "results": results, "provider": "youdotcom", "success": True}
+        except Exception as e:
+            return {"error": f"You.com error: {str(e)}", "success": False}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def ydc_news(query: str, count: int = 10) -> Dict[str, Any]:
+    """Get live news from You.com.
+    
+    Args:
+        query: News search query
+        count: Number of results (default: 10)
+    
+    Returns:
+        News results
+    """
+    try:
+        from praisonaiagents.tools.youdotcom_tools import ydc_news as _ydc_news
+        results = _ydc_news(query, count=count)
+        return {"query": query, "results": results, "provider": "youdotcom", "success": True}
+    except ImportError:
+        return {"error": "youdotcom not installed. Run: pip install youdotcom", "success": False}
     except Exception as e:
         return {"query": query, "error": str(e), "success": False}
 
 
 def duckduckgo_search(query: str, max_results: int = 5) -> Dict[str, Any]:
-    """Search using DuckDuckGo.
+    """Search using DuckDuckGo (no API key required).
     
     Args:
         query: Search query
-        max_results: Maximum results
+        max_results: Maximum results (default: 5)
     
     Returns:
         DuckDuckGo search results
@@ -342,7 +577,21 @@ def duckduckgo_search(query: str, max_results: int = 5) -> Dict[str, Any]:
     try:
         from praisonaiagents.tools.duckduckgo_tools import internet_search
         results = internet_search(query, max_results=max_results)
-        return {"query": query, "results": results, "success": True}
+        return {"query": query, "results": results, "provider": "duckduckgo", "success": True}
+    except ImportError:
+        try:
+            from duckduckgo_search import DDGS
+            ddgs = DDGS()
+            results = []
+            for r in ddgs.text(query, max_results=max_results):
+                results.append({
+                    "title": r.get("title", ""),
+                    "url": r.get("href", ""),
+                    "snippet": r.get("body", "")
+                })
+            return {"query": query, "results": results, "provider": "duckduckgo", "success": True}
+        except ImportError:
+            return {"error": "duckduckgo_search not installed. Run: pip install duckduckgo-search", "success": False}
     except Exception as e:
         return {"query": query, "error": str(e), "success": False}
 
@@ -352,7 +601,7 @@ def wikipedia_search(query: str, limit: int = 3) -> Dict[str, Any]:
     
     Args:
         query: Search query
-        limit: Maximum results
+        limit: Maximum results (default: 3)
     
     Returns:
         Wikipedia results
@@ -360,7 +609,9 @@ def wikipedia_search(query: str, limit: int = 3) -> Dict[str, Any]:
     try:
         from praisonaiagents.tools.wikipedia_tools import wiki_search
         results = wiki_search(query, limit=limit)
-        return {"query": query, "results": results, "success": True}
+        return {"query": query, "results": results, "provider": "wikipedia", "success": True}
+    except ImportError:
+        return {"error": "wikipedia package not installed. Run: pip install wikipedia", "success": False}
     except Exception as e:
         return {"query": query, "error": str(e), "success": False}
 
@@ -370,7 +621,7 @@ def arxiv_search(query: str, max_results: int = 5) -> Dict[str, Any]:
     
     Args:
         query: Search query
-        max_results: Maximum results
+        max_results: Maximum results (default: 5)
     
     Returns:
         arXiv paper results
@@ -378,7 +629,48 @@ def arxiv_search(query: str, max_results: int = 5) -> Dict[str, Any]:
     try:
         from praisonaiagents.tools.arxiv_tools import search_arxiv
         results = search_arxiv(query, max_results=max_results)
-        return {"query": query, "results": results, "success": True}
+        return {"query": query, "results": results, "provider": "arxiv", "success": True}
+    except ImportError:
+        return {"error": "arxiv package not installed. Run: pip install arxiv", "success": False}
+    except Exception as e:
+        return {"query": query, "error": str(e), "success": False}
+
+
+def searxng_search(query: str, max_results: int = 5, searxng_url: str = None) -> Dict[str, Any]:
+    """Search using SearxNG (self-hosted meta search engine).
+    
+    Args:
+        query: Search query
+        max_results: Maximum results (default: 5)
+        searxng_url: SearxNG instance URL (default: SEARXNG_URL env var or localhost:32768)
+    
+    Returns:
+        SearxNG search results
+    """
+    try:
+        import requests
+        url = searxng_url or os.environ.get("SEARXNG_URL", "http://localhost:32768/search")
+        
+        params = {
+            'q': query,
+            'format': 'json',
+            'engines': 'google,bing,duckduckgo',
+            'safesearch': '1'
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        raw_results = response.json().get('results', [])
+        results = []
+        for r in raw_results[:max_results]:
+            results.append({
+                "title": r.get("title", ""),
+                "url": r.get("url", ""),
+                "snippet": r.get("content", "")
+            })
+        
+        return {"query": query, "results": results, "provider": "searxng", "success": True}
     except Exception as e:
         return {"query": query, "error": str(e), "success": False}
 
@@ -1300,7 +1592,13 @@ AGENT_TOOLS = [run_agent, run_research, run_auto_agents, run_handoff, generate_a
 WORKFLOW_TOOLS = [workflow_run, workflow_create, workflow_from_yaml, export_to_n8n]
 
 # Search Tools
-SEARCH_TOOLS = [search_web, tavily_search, duckduckgo_search, wikipedia_search, arxiv_search]
+SEARCH_TOOLS = [
+    search_web, get_search_providers,
+    tavily_search, tavily_extract,
+    exa_search, exa_search_contents, exa_find_similar,
+    ydc_search, ydc_news,
+    duckduckgo_search, wikipedia_search, arxiv_search, searxng_search
+]
 
 # Crawl Tools
 CRAWL_TOOLS = [scrape_page, extract_links, web_crawl, crawl4ai_scrape]
