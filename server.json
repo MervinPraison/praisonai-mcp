@@ -1,0 +1,90 @@
+{
+    "$schema": "https://registry.modelcontextprotocol.io/schema/server-v1.json",
+    "name": "praisonai",
+    "display_name": "PraisonAI",
+    "description": "AI Agents framework with 64+ built-in tools. Expose search, calculations, memory, file operations, workflows, and custom Python functions as MCP tools for Claude Desktop, Cursor, VS Code, and other MCP clients.",
+    "homepage": "https://docs.praison.ai/mcp",
+    "repository": "https://github.com/MervinPraison/praisonai-mcp",
+    "version": "0.1.0",
+    "authors": [
+        {
+            "name": "Mervin Praison",
+            "url": "https://github.com/MervinPraison"
+        }
+    ],
+    "license": "MIT",
+    "packages": {
+        "pypi": "praisonai-mcp"
+    },
+    "remotes": {},
+    "installations": {
+        "uvx": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "praisonai-mcp"
+            ]
+        },
+        "pip": {
+            "type": "stdio",
+            "command": "praisonai-mcp",
+            "args": []
+        }
+    },
+    "tools": [
+        {
+            "name": "run_agent",
+            "description": "Run a PraisonAI agent with a prompt"
+        },
+        {
+            "name": "run_research",
+            "description": "Deep research on any topic"
+        },
+        {
+            "name": "run_auto_agents",
+            "description": "Auto-generate and run agents for a task"
+        },
+        {
+            "name": "search_web",
+            "description": "Unified web search with auto-fallback across providers"
+        },
+        {
+            "name": "memory_add",
+            "description": "Add to memory store"
+        },
+        {
+            "name": "memory_search",
+            "description": "Search memories"
+        },
+        {
+            "name": "run_python",
+            "description": "Execute Python code"
+        },
+        {
+            "name": "read_file",
+            "description": "Read file contents"
+        },
+        {
+            "name": "write_file",
+            "description": "Write content to file"
+        },
+        {
+            "name": "calculate",
+            "description": "Evaluate math expressions"
+        }
+    ],
+    "categories": [
+        "ai-agents",
+        "automation",
+        "development",
+        "tools"
+    ],
+    "tags": [
+        "ai-agents",
+        "multi-agent",
+        "automation",
+        "python",
+        "llm",
+        "praisonai"
+    ]
+}
