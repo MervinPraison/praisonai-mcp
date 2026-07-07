@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/mervinpraison-praisonai-mcp-badge.png)](https://mseep.ai/app/mervinpraison-praisonai-mcp)
+
 # PraisonAI MCP Server
 
 <p align="center">
